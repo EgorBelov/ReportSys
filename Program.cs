@@ -79,17 +79,13 @@ using (var scope = app.Services.CreateScope())
     var db = serviceProvider.GetRequiredService<ReportSysContext>();
     await db.Database.EnsureDeletedAsync();
     await db.Database.EnsureCreatedAsync();
-    //await CalcApiContextSeed.InitializeDb(db);
+    await ReportSysContextSeed.InitializeDb(db);
 
-
+   
 }
 
-// Redirect root URL to login page
-app.MapGet("/", context =>
-{
-    context.Response.Redirect("/Login/Login");
-    return Task.CompletedTask;
-});
+
+
 
 app.Run();
 

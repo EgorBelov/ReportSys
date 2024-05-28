@@ -8,6 +8,7 @@
         public string? SecondName { get; set; }
         public string? PatronymicName { get; set; }
         
+       public int WorkScheduleId { get; set; }
         public WorkSchedule WorkSchedule { get; set; }
 
         public int AuthUserId { get; set; }

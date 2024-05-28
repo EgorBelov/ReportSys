@@ -17,6 +17,7 @@
   <ItemGroup>
     <Folder Include="Pages\PageAccess2\" />
     <Folder Include="Pages\PageAccess1\" />
+    <Folder Include="ExcelData\" />
   </ItemGroup>
 
 </Project>
