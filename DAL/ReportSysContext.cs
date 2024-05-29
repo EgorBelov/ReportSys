@@ -7,21 +7,21 @@ namespace ReportSys.DAL
     public class ReportSysContext : DbContext
     {
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<Employee>()
-                .HasOne(e => e.AuthUser)
-                .WithOne(au => au.Employee)
-                .HasForeignKey<Employee>(e => e.AuthUserId);
+        //protected override void OnModelCreating(ModelBuilder modelBuilder)
+        //{
+        //    modelBuilder.Entity<Employee>()
+        //        .HasOne(e => e.AuthUser)
+        //        .WithOne(au => au.Employee)
+        //        .HasForeignKey<Employee>(e => e.AuthUserId);
 
-            // Или, если AuthUser должен содержать внешний ключ:
-            // modelBuilder.Entity<AuthUser>()
-            //     .HasOne(au => au.Employee)
-            //     .WithOne(e => e.AuthUser)
-            //     .HasForeignKey<AuthUser>(au => au.Id);
-        }
+        //    // Или, если AuthUser должен содержать внешний ключ:
+        //    // modelBuilder.Entity<AuthUser>()
+        //    //     .HasOne(au => au.Employee)
+        //    //     .WithOne(e => e.AuthUser)
+        //    //     .HasForeignKey<AuthUser>(au => au.Id);
+        //}
 
-        public DbSet<AuthUser> AuthUsers => Set<AuthUser>();
+        //public DbSet<AuthUser> AuthUsers => Set<AuthUser>();
         public DbSet<Employee> Employees => Set<Employee>();
         public DbSet<Department> Departments => Set<Department>();
         public DbSet<Position> Positions => Set<Position>();

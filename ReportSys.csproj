@@ -7,6 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="ExcelData\**" />
+    <Content Remove="ExcelData\**" />
+    <EmbeddedResource Remove="ExcelData\**" />
+    <None Remove="ExcelData\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="AutoMapper" Version="13.0.1" />
     <PackageReference Include="EPPlus" Version="7.1.2" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="7.0.19" />
@@ -17,7 +24,6 @@
   <ItemGroup>
     <Folder Include="Pages\PageAccess2\" />
     <Folder Include="Pages\PageAccess1\" />
-    <Folder Include="ExcelData\" />
   </ItemGroup>
 
 </Project>

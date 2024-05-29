@@ -49,7 +49,7 @@ namespace ReportSys.DAL
         public static async Task InitializeDb(ReportSysContext context)
         {
             // Укажите путь к вашему Excel-файлу
-            string filePath = "C://Users//nikic//Downloads/Данные.xlsx";
+            string filePath = "E://HSE_HERNYA//Prac//ReportSys//XlsxFiles//Данные (1).xlsx";
 
             // Загружаем данные из Excel
             DataTable dataTable = LoadExcelFile(filePath);
@@ -110,11 +110,11 @@ namespace ReportSys.DAL
             {
                 new EventType
                 {
-                    Name = "Приход"
+                    Name = "Вход"
                 },
                 new EventType
                 {
-                    Name = "Уход"
+                    Name = "Выход"
                 },
                 new EventType
                 {
@@ -163,7 +163,7 @@ namespace ReportSys.DAL
                 },
                 new Division
                 {
-                    Name = "Л-Технологии Управление автоматизацией бухгалтерского учета"
+                    Name = "Л-Технологии Управление автоматизации бухгалтерского учета"
                 },
                 new Division
                 {
@@ -225,7 +225,7 @@ namespace ReportSys.DAL
                 },
                 new Department
                 {
-                    Name = "Л-Технологии Отдел налогового учёта",
+                    Name = "Л-Технологии Отдел налогового учета",
                     Division = divisions[3]
                 },
                 new Department
@@ -244,6 +244,7 @@ namespace ReportSys.DAL
             await context.WorkSchedules.AddAsync(workschedule);
             await context.EventTypes.AddRangeAsync(eventTypes);
             await context.UnavailabilityTypes.AddRangeAsync(unavailabilityTypes);
+            await context.Positions.AddRangeAsync(positions);
 
             await context.SaveChangesAsync();
         }
