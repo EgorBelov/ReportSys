@@ -1,0 +1,13 @@
+﻿@page
+@model ReportSys.Pages.EntryAccess.IndexModel
+@{
+}
+<h2>Введите табельный номер</h2>
+
+<form method="post">
+    <div class="form-group">
+        <label for="EmployeeNumber">Табельный номер</label>
+        <input type="text" class="form-control" id="EmployeeNumber" name="EmployeeNumber" value="@Model.EmployeeNumber" />
+    </div>
+    <button type="submit" class="btn btn-primary">Отправить</button>
+</form>

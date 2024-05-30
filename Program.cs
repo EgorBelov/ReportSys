@@ -11,7 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddRazorPages();
-
+builder.Services.AddSession();
 
 builder.Services.AddDbContext<ReportSysContext>(options =>
 {
@@ -66,7 +66,7 @@ app.UseAuthorization();   // добавление middleware авторизации
 
 app.MapRazorPages();
 
-
+app.UseSession();
 
 ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
 

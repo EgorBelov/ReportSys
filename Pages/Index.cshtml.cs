@@ -80,6 +80,8 @@ namespace ReportSys.Pages
                     continue;
                 }
 
+
+                int id = int.Parse(RemoveExtraSpaces(GetOtherColumnValue(dataTable, "Сотрудник (Посетитель)", employeeName, "Карта №")).Trim());
                 string positionName = RemoveExtraSpaces(GetOtherColumnValue(dataTable, "Сотрудник (Посетитель)", employeeName, "Должность")).Trim();
                 string divisionOrDepartmentName = RemoveExtraSpaces(GetOtherColumnValue(dataTable, "Сотрудник (Посетитель)", employeeName, "Подразделение")).Trim();
 
@@ -97,6 +99,7 @@ namespace ReportSys.Pages
 
                     var employee = new Employee
                     {
+                        Id = id,
                         FirstName = words[0],
                         SecondName = words[1],
                         PatronymicName = words[2]
@@ -147,7 +150,7 @@ namespace ReportSys.Pages
                         var eventtype = await _context.EventTypes
                                                      .FirstOrDefaultAsync(x => x.Name == row[10].ToString());
                         // Формат даты
-                        string format = "dd.MM.yyyy";
+                        string format = "d.M.yyyy";
 
                         // Попытка парсинга строки в объект DateOnly
                         if (DateOnly.TryParseExact(row[3].ToString(), format, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly result))
@@ -161,7 +164,7 @@ namespace ReportSys.Pages
 
 
                         // Формат времени
-                        string format1 = "HH:mm:ss";
+                        string format1 = "H:mm:ss";
 
                         // Попытка парсинга строки в объект TimeOnly
                         if (TimeOnly.TryParseExact(row[4].ToString(), format1, out TimeOnly result1))
@@ -246,7 +249,7 @@ namespace ReportSys.Pages
             //}
 
             await _context.SaveChangesAsync();
-            return RedirectToPage("/Index");
+            return RedirectToPage("/PageUnavailability/Index");
         }
     }
 

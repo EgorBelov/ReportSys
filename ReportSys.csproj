@@ -21,9 +21,4 @@
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.18" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Pages\PageAccess2\" />
-    <Folder Include="Pages\PageAccess1\" />
-  </ItemGroup>
-
 </Project>
