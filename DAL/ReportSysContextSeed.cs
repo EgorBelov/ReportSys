@@ -49,10 +49,10 @@ namespace ReportSys.DAL
         public static async Task InitializeDb(ReportSysContext context)
         {
             // Укажите путь к вашему Excel-файлу
-            string filePath = "E://HSE_HERNYA//Prac//ReportSys//XlsxFiles//Данные (1).xlsx";
+            //string filePath = "E://HSE_HERNYA//Prac//ReportSys//XlsxFiles//Данные (1).xlsx";
 
             // Загружаем данные из Excel
-            DataTable dataTable = LoadExcelFile(filePath);
+            //DataTable dataTable = LoadExcelFile(filePath);
 
 
             //var authusers = new List<AuthUser>
@@ -95,7 +95,7 @@ namespace ReportSys.DAL
                 new Position
                 {
                     Name = "Начальник управления",
-                    AccessLevel = 2
+                    AccessLevel = 1
                 }
             };
             var workschedule = new WorkSchedule
@@ -147,100 +147,153 @@ namespace ReportSys.DAL
                 },
             };
 
-            var divisions = new List<Division>
+            var departments = new List<Department>
             {
-                new Division
+                new Department
                 {
                     Name = "Л-Технологии Управление информационной поддержки"
                 },
-                new Division
+                new Department
                 {
                     Name = "Л-Технологии Управление логистических систем"
                 },
-                new Division
+                new Department
                 {
                     Name = "Л-Технологии Управление экономических и финансовых систем"
                 },
-                new Division
+                new Department
                 {
                     Name = "Л-Технологии Управление автоматизации бухгалтерского учета"
                 },
-                new Division
+                new Department
                 {
                     Name = "Л-Технологии Управление корпоративных платформ и инфроструктура"
                 },
-            };
 
-            var departments = new List<Department>
-            { 
-                new Department 
-                { 
+                new Department
+                {
                     Name = "Л-Технологии Отдел нормативно-справочной информации",
-                    Division = divisions[0]
                 },
                 new Department
                 {
                     Name = "Л-Технологии Отдел интеграции",
-                    Division = divisions[0]
                 },
                 new Department
                 {
                     Name = "Л-Технологии Отдел оперативной логистики",
-                    Division = divisions[1]
                 },
                 new Department
                 {
                     Name = "Л-Технологии Отдел снабжения и сбыта",
-                    Division = divisions[1]
                 },
                 new Department
                 {
                     Name = "Л-Технологии Отдел технического обслуживания и ремонта оборудования",
-                    Division = divisions[1]
                 },
                 new Department
                 {
                     Name = "Л-Технологии Отдел экономики",
-                    Division = divisions[2]
                 },
                 new Department
                 {
                     Name = "Л-Технологии Отдел финансов",
-                    Division = divisions[2]
                 },
                 new Department
                 {
                     Name = "Л-Технологии Отдел инвестиционных проектов и договоров",
-                    Division = divisions[2]
                 },
                 new Department
                 {
                     Name = "Л-Технологии Отдел бухгалтерского учета",
-                    Division = divisions[3]
                 },
                 new Department
                 {
                     Name = "Л-Технологии Отдел учета и отчетности по НДС",
-                    Division = divisions[3]
                 },
                 new Department
                 {
                     Name = "Л-Технологии Отдел налогового учета",
-                    Division = divisions[3]
                 },
                 new Department
                 {
                     Name = "Л-Технологии Отдел внеоборотных активов",
-                    Division = divisions[3]
                 },
                 new Department
                 {
                     Name = "Л-Технологии Отдел представления и развития систем управленческой отчетности",
-                    Division = divisions[4]
+                }
+            };
+
+            var hierarchies = new List<Hierarchy>
+            { 
+                new Hierarchy 
+                { 
+                    UpperDepartment = departments[0],
+                    LowerDepartment = departments[5],
+                },
+                new Hierarchy
+                {
+                    UpperDepartment = departments[0],
+                    LowerDepartment = departments[6],
+                },
+                new Hierarchy
+                {
+                    UpperDepartment = departments[1],
+                    LowerDepartment = departments[7],
+                },
+                new Hierarchy
+                {
+                   UpperDepartment = departments[1],
+                    LowerDepartment = departments[8],
+                },
+                new Hierarchy
+                {
+                    UpperDepartment = departments[1],
+                    LowerDepartment = departments[9],
+                },
+                new Hierarchy
+                {
+                    UpperDepartment = departments[2],
+                    LowerDepartment = departments[10],
+                },
+                new Hierarchy
+                {
+                    UpperDepartment = departments[2],
+                    LowerDepartment = departments[11],
+                },
+                new Hierarchy
+                {
+                    UpperDepartment = departments[2],
+                    LowerDepartment = departments[12],
+                },
+                new Hierarchy
+                {
+                    UpperDepartment = departments[3],
+                    LowerDepartment = departments[13],
+                },
+                new Hierarchy
+                {
+                    UpperDepartment = departments[3],
+                    LowerDepartment = departments[14],
+                },
+                new Hierarchy
+                {
+                    UpperDepartment = departments[3],
+                    LowerDepartment = departments[15],
+                },
+                new Hierarchy
+                {
+                    UpperDepartment = departments[3],
+                    LowerDepartment = departments[16],
+                },
+                new Hierarchy
+                {
+                    UpperDepartment = departments[4],
+                    LowerDepartment = departments[17],
                 },
             };
 
-            await context.Departments.AddRangeAsync(departments);
+            await context.Hierarchies.AddRangeAsync(hierarchies);
             await context.WorkSchedules.AddAsync(workschedule);
             await context.EventTypes.AddRangeAsync(eventTypes);
             await context.UnavailabilityTypes.AddRangeAsync(unavailabilityTypes);

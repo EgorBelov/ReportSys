@@ -102,37 +102,22 @@ namespace ReportSys.Pages
                         Id = id,
                         FirstName = words[0],
                         SecondName = words[1],
-                        PatronymicName = words[2]
+                        LastName = words[2]
                     };
+                   
+                    var department = await _context.Departments
+                                                    .FirstOrDefaultAsync(x => x.Name == divisionOrDepartmentName);
 
-                    if (divisionOrDepartmentName.Contains("Отдел"))
+                    if (department != null)
                     {
-                        var department = await _context.Departments
-                                                       .FirstOrDefaultAsync(x => x.Name == divisionOrDepartmentName);
-
-                        if (department != null)
-                        {
-                            department.Employees.Add(employee);
-                        }
-                        else
-                        {
-                            Console.WriteLine($"Department not found: {divisionOrDepartmentName}");
-                        }
+                        department.Employees.Add(employee);
                     }
                     else
                     {
-                        var division = await _context.Divisions
-                                                     .FirstOrDefaultAsync(x => x.Name == divisionOrDepartmentName);
-
-                        if (division != null)
-                        {
-                            division.Employees.Add(employee);
-                        }
-                        else
-                        {
-                            Console.WriteLine($"Division not found: {divisionOrDepartmentName}");
-                        }
+                        Console.WriteLine($"Department not found: {divisionOrDepartmentName}");
                     }
+                   
+                  
 
                     position.Employees.Add(employee);
 

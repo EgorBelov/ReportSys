@@ -47,9 +47,7 @@ namespace ReportSys.Pages.EntryAccess
                 case 0:
                     return RedirectToPage("/PageAccess0/Index");
                 case 1:
-                    return RedirectToPage("/PageAccess1/Index");
-                case 2:
-                    return RedirectToPage("/PageAccess2/Index");
+                    return RedirectToPage("/PageAccess1/Index");               
                 default:
                     ModelState.AddModelError(string.Empty, "Неизвестный доступ.");
                     return Page();

@@ -26,21 +26,21 @@ namespace ReportSys.Pages.PageUnavailability
         {
             DataTable dataTable = new DataTable();
 
-            // Копируем загруженный файл в поток
+            // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ
             using (var stream = new MemoryStream())
             {
                 await Upload.CopyToAsync(stream);
                 using (ExcelPackage package = new ExcelPackage(stream))
                 {
-                    ExcelWorksheet worksheet = package.Workbook.Worksheets[0]; // Используем первый лист
+                    ExcelWorksheet worksheet = package.Workbook.Worksheets[0]; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
 
-                    // Добавляем колонки
+                    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
                     foreach (var firstRowCell in worksheet.Cells[1, 1, 1, worksheet.Dimension.End.Column])
                     {
                         dataTable.Columns.Add(firstRowCell.Text);
                     }
 
-                    // Добавляем строки
+                    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
                     for (int rowNum = 2; rowNum <= worksheet.Dimension.End.Row; rowNum++)
                     {
                         var wsRow = worksheet.Cells[rowNum, 1, rowNum, worksheet.Dimension.End.Column];
@@ -54,7 +54,7 @@ namespace ReportSys.Pages.PageUnavailability
                 }
             }
 
-            var groupedRows = GroupRowsByColumnValue(dataTable, "Таб№ ");
+            var groupedRows = GroupRowsByColumnValue(dataTable, "РўР°Р±в„– ");
             
 
             foreach (var kvp in groupedRows)
@@ -69,39 +69,39 @@ namespace ReportSys.Pages.PageUnavailability
                                 .FirstOrDefaultAsync(x => x.Id.ToString() == row[6].ToString());
 
 
-                    // Формат времени
+                    // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
                     string format1 = "HH.mm.ss";
 
-                    // Попытка парсинга строки в объект TimeOnly
+                    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ TimeOnly
                     if (TimeOnly.TryParseExact(row[2].ToString(), format1, out TimeOnly result1))
                     {
-                        Console.WriteLine($"Время: {result1}");
+                        Console.WriteLine($"пїЅпїЅпїЅпїЅпїЅ: {result1}");
                     }
                     else
                     {
-                        Console.WriteLine("Невозможно преобразовать строку в время.");
+                        Console.WriteLine("пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ.");
                     }
-                    // Попытка парсинга строки в объект TimeOnly
+                    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ TimeOnly
                     if (TimeOnly.TryParseExact(row[1].ToString(), format1, out TimeOnly result2))
                     {
-                        Console.WriteLine($"Время: {result1}");
+                        Console.WriteLine($"пїЅпїЅпїЅпїЅпїЅ: {result1}");
                     }
                     else
                     {
-                        Console.WriteLine("Невозможно преобразовать строку в время.");
+                        Console.WriteLine("пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ.");
                     }
 
-                    // Формат даты
+                    // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
                     string format = "M/d/yyyy";
 
-                    // Попытка парсинга строки в объект DateOnly
+                    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ DateOnly
                     if (DateOnly.TryParseExact(row[5].ToString(), format, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly result))
                     {
-                        Console.WriteLine($"Дата: {result}");
+                        Console.WriteLine($"пїЅпїЅпїЅпїЅ: {result}");
                     }
                     else
                     {
-                        Console.WriteLine("Невозможно преобразовать строку в дату.");
+                        Console.WriteLine("пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅ.");
                     }
                     unavs.Add(
                         new Unavailability
@@ -151,10 +151,10 @@ namespace ReportSys.Pages.PageUnavailability
             //{
             //    var employee = new Employee
             //    {
-            //        // Заполняем свойства модели данными из строки
-            //        Name = row["NameColumnName"].ToString(), // Замените на реальное имя колонки
-            //        Position = row["PositionColumnName"].ToString() // Замените на реальное имя колонки
-            //                                                        // Добавьте другие свойства по необходимости
+            //        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+            //        Name = row["NameColumnName"].ToString(), // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+            //        Position = row["PositionColumnName"].ToString() // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+            //                                                        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
             //    };
 
             //    _context.Employees.Add(employee);

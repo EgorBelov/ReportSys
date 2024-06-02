@@ -23,9 +23,9 @@ namespace ReportSys.DAL
 
         //public DbSet<AuthUser> AuthUsers => Set<AuthUser>();
         public DbSet<Employee> Employees => Set<Employee>();
-        public DbSet<Department> Departments => Set<Department>();
+        public DbSet<Hierarchy> Hierarchies => Set<Hierarchy>();
         public DbSet<Position> Positions => Set<Position>();
-        public DbSet<Division> Divisions => Set<Division>();
+        public DbSet<Department> Departments => Set<Department>();
         public DbSet<WorkSchedule> WorkSchedules => Set<WorkSchedule>();
         public DbSet<EventType> EventTypes => Set<EventType>();
         public DbSet<Event> Events => Set<Event>();
@@ -38,7 +38,22 @@ namespace ReportSys.DAL
 
         }
 
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Hierarchy>()
+                .HasOne(h => h.UpperDepartment)
+                .WithMany(d => d.LowerDepartments)
+                .HasForeignKey(h => h.UpperDepartmentId)
+                .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<Hierarchy>()
+                .HasOne(h => h.LowerDepartment)
+                .WithMany(d => d.UpperDepartments)
+                .HasForeignKey(h => h.LowerDepartmentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            base.OnModelCreating(modelBuilder);
+        }
 
     }
 }
