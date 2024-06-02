@@ -127,6 +127,26 @@ namespace ReportSys.Pages.Services
                             continue; // Пропускаем дни, которых нет
                         }
 
+                        var startRow = rowIndex;
+                        if (unavailabilityForDate != null)
+                        {
+                            if (unavailabilityForDate.UnavailabilityType.Id == 4)
+                            {
+                                worksheet.Cells[rowIndex, 5].Value = unavailabilityForDate.UnavailabilityFrom.ToShortTimeString();
+                                worksheet.Cells[rowIndex, 6].Value = unavailabilityForDate.UnavailabilityBefore.ToShortTimeString();
+                                worksheet.Cells[rowIndex, 7].Value = unavailabilityForDate.Reason;
+                            }
+                            else
+                            {
+                                worksheet.Cells[rowIndex, 8].Value = unavailabilityForDate.UnavailabilityType.Name;
+                            }
+                        }
+                        else
+                        {
+                            worksheet.Cells[rowIndex, 5].Value = "-";
+                            worksheet.Cells[rowIndex, 6].Value = "-";
+                            worksheet.Cells[rowIndex, 7].Value = "-";
+                        }
                         foreach (var eventItem in eventsForDate)
                         {
                             worksheet.Cells[rowIndex, 1].Value = eventItem.Date.ToShortDateString();
@@ -134,28 +154,36 @@ namespace ReportSys.Pages.Services
                             worksheet.Cells[rowIndex, 3].Value = eventItem.EventType.Name;
                             worksheet.Cells[rowIndex, 4].Value = eventItem.Territory;
 
-                            if (unavailabilityForDate != null)
-                            {
-                                if (unavailabilityForDate.UnavailabilityType.Id == 4)
-                                {
-                                    worksheet.Cells[rowIndex, 5].Value = unavailabilityForDate.UnavailabilityFrom.ToShortTimeString();
-                                    worksheet.Cells[rowIndex, 6].Value = unavailabilityForDate.UnavailabilityBefore.ToShortTimeString();
-                                    worksheet.Cells[rowIndex, 7].Value = unavailabilityForDate.Reason;
-                                }
-                                else
-                                {
-                                    worksheet.Cells[rowIndex, 8].Value = unavailabilityForDate.UnavailabilityType.Name;
-                                }
-                            }
-                            else
-                            {
-                                worksheet.Cells[rowIndex, 5].Value = "-";
-                                worksheet.Cells[rowIndex, 6].Value = "-";
-                                worksheet.Cells[rowIndex, 7].Value = "-";
-                            }
+                            //if (unavailabilityForDate != null)
+                            //{
+                            //    if (unavailabilityForDate.UnavailabilityType.Id == 4)
+                            //    {
+                            //        worksheet.Cells[rowIndex, 5].Value = unavailabilityForDate.UnavailabilityFrom.ToShortTimeString();
+                            //        worksheet.Cells[rowIndex, 6].Value = unavailabilityForDate.UnavailabilityBefore.ToShortTimeString();
+                            //        worksheet.Cells[rowIndex, 7].Value = unavailabilityForDate.Reason;
+                            //    }
+                            //    else
+                            //    {
+                            //        worksheet.Cells[rowIndex, 8].Value = unavailabilityForDate.UnavailabilityType.Name;
+                            //    }
+                            //}
+                            //else
+                            //{
+                            //    worksheet.Cells[rowIndex, 5].Value = "-";
+                            //    worksheet.Cells[rowIndex, 6].Value = "-";
+                            //    worksheet.Cells[rowIndex, 7].Value = "-";
+                            //}
 
                             rowIndex++;
                         }
+                        
+                        if (eventsForDate.Count > 0)
+                        {
+                            worksheet.Cells[$"E{startRow}:E{rowIndex - 1}"].Merge = true;
+                            worksheet.Cells[$"F{startRow}:F{rowIndex - 1}"].Merge = true;
+                            worksheet.Cells[$"G{startRow}:G{rowIndex - 1}"].Merge = true;
+                        }
+
 
                         // Если нет событий для даты, все равно добавляем строку
                         if (eventsForDate.Count == 0)
