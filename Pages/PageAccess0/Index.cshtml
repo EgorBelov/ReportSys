@@ -2,15 +2,48 @@
 @model ReportSys.Pages.PageAccess0.IndexModel
 @{
 }
-<h2>доступ 0</h2>
-<form method="post">
-    <div class="form-group">
-        <label for="startDate">Start Date:</label>
-        <input type="date" class="form-control" id="startDate" name="startDate" />
-    </div>
-    <div class="form-group">
-        <label for="endDate">End Date:</label>
-        <input type="date" class="form-control" id="endDate" name="endDate" />
-    </div>
-    <button type="submit" class="btn btn-primary">Generate Report</button>
-</form>
+
+
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Доступ 0</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const startDateInput = document.getElementById('startDate');
+            const endDateInput = document.getElementById('endDate');
+            const submitButton = document.querySelector('button[type="submit"]');
+
+            function toggleSubmitButton() {
+                if (startDateInput.value && endDateInput.value) {
+                    submitButton.disabled = false;
+                } else {
+                    submitButton.disabled = true;
+                }
+            }
+
+            startDateInput.addEventListener('input', toggleSubmitButton);
+            endDateInput.addEventListener('input', toggleSubmitButton);
+
+            toggleSubmitButton(); // Initial check
+        });
+    </script>
+</head>
+<body>
+    <h2>доступ 0</h2>
+    <form method="post">
+        <div class="form-group">
+            <label for="startDate">Start Date:</label>
+            <input type="date" class="form-control" id="startDate" name="startDate" />
+        </div>
+        <div class="form-group">
+            <label for="endDate">End Date:</label>
+            <input type="date" class="form-control" id="endDate" name="endDate" />
+        </div>
+        <button type="submit" class="btn btn-primary" disabled>Generate Report</button>
+    </form>
+</body>
+</html>

@@ -23,6 +23,7 @@ namespace ReportSys.Pages.PageAccess0
 
         public async Task<IActionResult> OnPostAsync(DateOnly startDate, DateOnly endDate)
         {
+            
             var employeeNumber = HttpContext.Session.GetString("EmployeeNumber");
 
             //await CreateXlsxFirst(_context, employeeNumber, startDate, endDate);

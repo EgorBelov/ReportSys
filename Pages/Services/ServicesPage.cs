@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
+using OfficeOpenXml.Style;
+using System.Drawing;
 using ReportSys.DAL;
 using ReportSys.DAL.Entities;
 
@@ -85,6 +87,9 @@ namespace ReportSys.Pages.Services
                         continue; // Пропускаем, если сотрудник не найден
                     }
 
+                    var star_time = employee.WorkSchedule.Arrival;
+                    var end_time = employee.WorkSchedule.Exit;
+
                     var worksheet = package.Workbook.Worksheets.Add(employeeNumber);
 
                     // Заголовки столбцов
@@ -147,32 +152,87 @@ namespace ReportSys.Pages.Services
                             worksheet.Cells[rowIndex, 6].Value = "-";
                             worksheet.Cells[rowIndex, 7].Value = "-";
                         }
+                        var firstEventType0 = eventsForDate.FirstOrDefault(e => e.EventType.Id == 1);
+                        var lastEventType1 = eventsForDate.LastOrDefault(e => e.EventType.Id == 2);
+
                         foreach (var eventItem in eventsForDate)
                         {
                             worksheet.Cells[rowIndex, 1].Value = eventItem.Date.ToShortDateString();
                             worksheet.Cells[rowIndex, 2].Value = eventItem.Time;
+                            if (eventItem.Time == firstEventType0.Time)
+                            {
+                                if ((star_time - eventItem.Time > TimeSpan.FromMinutes(3)) && eventItem.Time < star_time)
+                                {
+                                    // Устанавливаем цвет фона для ячейки
+                                    worksheet.Cells[rowIndex, 2].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                                    worksheet.Cells[rowIndex, 2].Style.Fill.BackgroundColor.SetColor(Color.Green);
+                                }
+
+
+                            }
+                            if (eventItem.Time == lastEventType1.Time)
+                            {
+                                if ((eventItem.Time - end_time > TimeSpan.FromMinutes(3)) && eventItem.Time > end_time)
+                                {
+                                    // Устанавливаем цвет фона для ячейки
+                                    worksheet.Cells[rowIndex, 2].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                                    worksheet.Cells[rowIndex, 2].Style.Fill.BackgroundColor.SetColor(Color.Green);
+                                }
+                            }
+
+                            //отсутствие
+                            // c - worksheet.Cells[rowIndex, 5]
+                            // по - worksheet.Cells[rowIndex, 6]
+
+                            if (worksheet.Cells[rowIndex, 5].Value ==  "-" && worksheet.Cells[rowIndex, 5].Value == "-")
+                            {
+                                if (eventItem.Time == firstEventType0.Time)
+                                {
+                                    if ((star_time - eventItem.Time > TimeSpan.FromMinutes(3)) && eventItem.Time < star_time)
+                                    {
+                                        // Устанавливаем цвет фона для ячейки
+                                        worksheet.Cells[rowIndex, 2].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                                        worksheet.Cells[rowIndex, 2].Style.Fill.BackgroundColor.SetColor(Color.Orange);
+                                    }
+                                }
+                                if (eventItem.Time == lastEventType1.Time)
+                                {
+                                    if ((eventItem.Time - end_time > TimeSpan.FromMinutes(3)) && eventItem.Time > end_time)
+                                    {
+                                        // Устанавливаем цвет фона для ячейки
+                                        worksheet.Cells[rowIndex, 2].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                                        worksheet.Cells[rowIndex, 2].Style.Fill.BackgroundColor.SetColor(Color.Orange);
+                                    }
+                                }
+                            }
+                            else
+                            {
+
+                            }
+                                                    
+
+                            //if (eventItem.Time == firstEventType0.Time && )
+                            //{
+                            //    if ((star_time - eventItem.Time > TimeSpan.FromMinutes(3)) && eventItem.Time < star_time)
+                            //    {
+                            //        // Устанавливаем цвет фона для ячейки
+                            //        worksheet.Cells[rowIndex, 2].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                            //        worksheet.Cells[rowIndex, 2].Style.Fill.BackgroundColor.SetColor(Color.Green);
+                            //    }
+                            //}
+
+                            //if (eventItem.Time == lastEventType1.Time &&)
+                            //{
+                            //    if ((eventItem.Time - end_time > TimeSpan.FromMinutes(3)) && eventItem.Time > end_time)
+                            //    {
+                            //        // Устанавливаем цвет фона для ячейки
+                            //        worksheet.Cells[rowIndex, 2].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                            //        worksheet.Cells[rowIndex, 2].Style.Fill.BackgroundColor.SetColor(Color.Green);
+                            //    }
+                            //}
+
                             worksheet.Cells[rowIndex, 3].Value = eventItem.EventType.Name;
                             worksheet.Cells[rowIndex, 4].Value = eventItem.Territory;
-
-                            //if (unavailabilityForDate != null)
-                            //{
-                            //    if (unavailabilityForDate.UnavailabilityType.Id == 4)
-                            //    {
-                            //        worksheet.Cells[rowIndex, 5].Value = unavailabilityForDate.UnavailabilityFrom.ToShortTimeString();
-                            //        worksheet.Cells[rowIndex, 6].Value = unavailabilityForDate.UnavailabilityBefore.ToShortTimeString();
-                            //        worksheet.Cells[rowIndex, 7].Value = unavailabilityForDate.Reason;
-                            //    }
-                            //    else
-                            //    {
-                            //        worksheet.Cells[rowIndex, 8].Value = unavailabilityForDate.UnavailabilityType.Name;
-                            //    }
-                            //}
-                            //else
-                            //{
-                            //    worksheet.Cells[rowIndex, 5].Value = "-";
-                            //    worksheet.Cells[rowIndex, 6].Value = "-";
-                            //    worksheet.Cells[rowIndex, 7].Value = "-";
-                            //}
 
                             rowIndex++;
                         }
@@ -219,7 +279,12 @@ namespace ReportSys.Pages.Services
 
                     var str = employee.WorkSchedule.GetScheduleString();
                     worksheet.Cells[3, 9].Value = str;
-                    worksheet.Cells[$"I3:I{rowIndex - 1}"].Merge = true;
+
+                    if (rowIndex != 3)
+                    {
+                        worksheet.Cells[$"I3:I{rowIndex - 1}"].Merge = true;
+                    }
+                    
                 }
 
                 package.Save();

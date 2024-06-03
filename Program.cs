@@ -77,7 +77,7 @@ using (var scope = app.Services.CreateScope())
 
 
     var db = serviceProvider.GetRequiredService<ReportSysContext>();
-    //await db.Database.EnsureDeletedAsync();
+    await db.Database.EnsureDeletedAsync();
     await db.Database.EnsureCreatedAsync();
     await ReportSysContextSeed.InitializeDb(db);
 

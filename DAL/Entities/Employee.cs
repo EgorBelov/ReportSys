@@ -11,8 +11,8 @@
         public int WorkScheduleId { get; set; }
         public WorkSchedule WorkSchedule { get; set; }
 
-        public int? PositionId { get; set; }
-        public Position? Position { get; set; }
+        public int PositionId { get; set; }
+        public Position Position { get; set; }
 
         //public int? AuthUserId { get; set; }
         //public AuthUser? AuthUser { get; set; }

@@ -111,6 +111,9 @@ namespace ReportSys.Pages.PageAccess1
         private async Task<IActionResult> HandleAction2()
         {
 
+           
+
+
             if (StartDate > EndDate)
             {
                 TempData["Message"] = "Start date cannot be later than end date.";

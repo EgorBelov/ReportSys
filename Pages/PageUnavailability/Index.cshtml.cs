@@ -70,7 +70,7 @@ namespace ReportSys.Pages.PageUnavailability
 
 
                     // ������ �������
-                    string format1 = "HH.mm.ss";
+                    string format1 = "H.mm.ss";
 
                     // ������� �������� ������ � ������ TimeOnly
                     if (TimeOnly.TryParseExact(row[2].ToString(), format1, out TimeOnly result1))
@@ -92,7 +92,7 @@ namespace ReportSys.Pages.PageUnavailability
                     }
 
                     // ������ ����
-                    string format = "M/d/yyyy";
+                    string format = "d.M.yyyy";
 
                     // ������� �������� ������ � ������ DateOnly
                     if (DateOnly.TryParseExact(row[5].ToString(), format, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly result))
@@ -106,8 +106,8 @@ namespace ReportSys.Pages.PageUnavailability
                     unavs.Add(
                         new Unavailability
                         {
-                            UnavailabilityFrom = result1,
-                            UnavailabilityBefore = result2,
+                            UnavailabilityFrom = result2,
+                            UnavailabilityBefore = result1,
                             Reason = row[3].ToString(),
                             UnavailabilityType = typeUnav,
                             Date = result,
