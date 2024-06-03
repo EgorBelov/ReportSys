@@ -73,36 +73,99 @@ namespace ReportSys.Pages.PageUnavailability
                     string format1 = "H.mm.ss";
 
                     // ������� �������� ������ � ������ TimeOnly
-                    if (TimeOnly.TryParseExact(row[2].ToString(), format1, out TimeOnly result1))
+                    //if (TimeOnly.TryParseExact(row[2].ToString(), format1, out TimeOnly result1))
+                    //{
+                    //    Console.WriteLine($"�����: {result1}");
+                    //}
+                    //else
+                    //{
+                    //    Console.WriteLine("���������� ������������� ������ � �����.");
+                    //}
+
+                    string[] formatsTime = { "H.mm.ss", "h:mm:ss tt", "HH:mm:ss", "h:mm tt" };
+                    if (TimeOnly.TryParseExact(row[2].ToString(), formatsTime, CultureInfo.InvariantCulture, DateTimeStyles.None, out TimeOnly result1))
                     {
-                        Console.WriteLine($"�����: {result1}");
+                        Console.WriteLine($"Время: {result1}");
                     }
                     else
                     {
-                        Console.WriteLine("���������� ������������� ������ � �����.");
+                        Console.WriteLine("Невозможно распознать время.");
                     }
+                    //if (TimeOnly.TryParse(row[2].ToString(), out TimeOnly result1))
+                    //{
+                    //    Console.WriteLine($"Время: {result1}");
+                    //}
+                    //else
+                    //{
+                    //    Console.WriteLine("Невозможно распознать время.");
+                    //}
+
+
+
+
+
                     // ������� �������� ������ � ������ TimeOnly
-                    if (TimeOnly.TryParseExact(row[1].ToString(), format1, out TimeOnly result2))
+                    //if (TimeOnly.TryParseExact(row[1].ToString(), format1, out TimeOnly result2))
+                    //{
+                    //    Console.WriteLine($"�����: {result2}");
+                    //}
+                    //else
+                    //{
+                    //    Console.WriteLine("���������� ������������� ������ � �����.");
+                    //}
+                    if (TimeOnly.TryParseExact(row[1].ToString(), formatsTime, CultureInfo.InvariantCulture, DateTimeStyles.None, out TimeOnly result2))
                     {
-                        Console.WriteLine($"�����: {result1}");
+                        Console.WriteLine($"Время: {result2}");
                     }
                     else
                     {
-                        Console.WriteLine("���������� ������������� ������ � �����.");
+                        Console.WriteLine("Невозможно распознать время.");
                     }
+                    //if (TimeOnly.TryParse(row[1].ToString(), out TimeOnly result2))
+                    //{
+                    //    Console.WriteLine($"Время: {result2}");
+                    //}
+                    //else
+                    //{
+                    //    Console.WriteLine("Невозможно распознать время.");
+                    //}
 
-                    // ������ ����
-                    string format = "d.M.yyyy";
 
-                    // ������� �������� ������ � ������ DateOnly
-                    if (DateOnly.TryParseExact(row[5].ToString(), format, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly result))
+
+
+                    //// ������ ����
+                    //string format = "d.M.yyyy";
+
+                    //// ������� �������� ������ � ������ DateOnly
+                    //if (DateOnly.TryParseExact(row[5].ToString(), format, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly result))
+                    //{
+                    //    Console.WriteLine($"����: {result}");
+                    //}
+                    //else
+                    //{
+                    //    Console.WriteLine("���������� ������������� ������ � ����.");
+                    //}
+
+
+                    string[] formatsDate = { "d.M.yyyy", "M/d/yyyy", "MMMM d, yyyy", "dd.MM.yyyy", "yyyy-MM-dd" };
+
+                    if (DateOnly.TryParse(row[5].ToString(), out DateOnly result))
                     {
-                        Console.WriteLine($"����: {result}");
+                        Console.WriteLine($"Дата: {result.ToString("d", CultureInfo.InvariantCulture)}");
                     }
                     else
                     {
-                        Console.WriteLine("���������� ������������� ������ � ����.");
+                        Console.WriteLine("Невозможно распознать дату.");
                     }
+                    //if (DateOnly.TryParseExact(row[5].ToString(), formatsDate, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly result))
+                    //{
+                    //    Console.WriteLine($"Дата: {result.ToString("d", CultureInfo.InvariantCulture)}");
+                    //}
+                    //else
+                    //{
+                    //    Console.WriteLine("Невозможно распознать дату.");
+                    //}
+
                     unavs.Add(
                         new Unavailability
                         {
@@ -161,6 +224,11 @@ namespace ReportSys.Pages.PageUnavailability
             //}
 
             await _context.SaveChangesAsync();
+
+            // Setting success message
+            TempData["SuccessMessage"] = "File uploaded successfully.";
+
+
             return RedirectToPage("/EntryAccess/Index");
         }
     }

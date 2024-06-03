@@ -77,10 +77,10 @@ namespace ReportSys.Pages.Services
                 foreach (var employeeNumber in employeeNumbers)
                 {
                     var employee = await _context.Employees
-                       .Include(e => e.WorkSchedule)
-                       .Include(e => e.Events).ThenInclude(s => s.EventType)
-                       .Include(e => e.Unavailabilitys).ThenInclude(s => s.UnavailabilityType)
-                       .FirstOrDefaultAsync(e => e.Id.ToString() == employeeNumber);
+                        .Include(e => e.WorkSchedule)
+                        .Include(e => e.Events).ThenInclude(s => s.EventType)
+                        .Include(e => e.Unavailabilitys).ThenInclude(s => s.UnavailabilityType)
+                        .FirstOrDefaultAsync(e => e.Id.ToString() == employeeNumber);
 
                     if (employee == null)
                     {
@@ -113,6 +113,29 @@ namespace ReportSys.Pages.Services
                     worksheet.Cells["I1:I2"].Merge = true;
                     worksheet.Cells["E1:G1"].Merge = true;
 
+                    // Форматирование ячеек заголовков
+                    worksheet.Cells["A1:I2"].Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                    worksheet.Cells["A1:I2"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+
+
+                    // Добавление границ к заголовкам
+                    worksheet.Cells["A1:I2"].Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    worksheet.Cells["A1:I2"].Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    worksheet.Cells["A1:I2"].Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                    worksheet.Cells["A1:I2"].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+
+
+                    worksheet.Column(1).Width = 15;
+                    worksheet.Column(2).Width = 15;
+                    worksheet.Column(3).Width = 15;
+                    worksheet.Column(4).Width = 25;
+                    worksheet.Column(5).Width = 15;
+                    worksheet.Column(6).Width = 15;
+                    worksheet.Column(7).Width = 20;
+                    worksheet.Column(8).Width = 20;
+                    worksheet.Column(8).Style.WrapText = true;
+                    worksheet.Column(9).Width = 25;
+
                     int rowIndex = 3; // Начинаем с третьей строки, так как первые две заняты заголовками
 
                     // Проход по дням в выбранном промежутке, пропуская выходные
@@ -137,8 +160,8 @@ namespace ReportSys.Pages.Services
                         {
                             if (unavailabilityForDate.UnavailabilityType.Id == 4)
                             {
-                                worksheet.Cells[rowIndex, 5].Value = unavailabilityForDate.UnavailabilityFrom.ToShortTimeString();
-                                worksheet.Cells[rowIndex, 6].Value = unavailabilityForDate.UnavailabilityBefore.ToShortTimeString();
+                                worksheet.Cells[rowIndex, 5].Value = unavailabilityForDate.UnavailabilityFrom.ToString(@"hh\:mm\:ss");
+                                worksheet.Cells[rowIndex, 6].Value = unavailabilityForDate.UnavailabilityBefore.ToString(@"hh\:mm\:ss");
                                 worksheet.Cells[rowIndex, 7].Value = unavailabilityForDate.Reason;
                             }
                             else
@@ -152,13 +175,15 @@ namespace ReportSys.Pages.Services
                             worksheet.Cells[rowIndex, 6].Value = "-";
                             worksheet.Cells[rowIndex, 7].Value = "-";
                         }
+
                         var firstEventType0 = eventsForDate.FirstOrDefault(e => e.EventType.Id == 1);
                         var lastEventType1 = eventsForDate.LastOrDefault(e => e.EventType.Id == 2);
 
                         foreach (var eventItem in eventsForDate)
                         {
-                            worksheet.Cells[rowIndex, 1].Value = eventItem.Date.ToShortDateString();
-                            worksheet.Cells[rowIndex, 2].Value = eventItem.Time;
+                            worksheet.Cells[rowIndex, 1].Value = eventItem.Date.ToString("yyyy-MM-dd");
+                            worksheet.Cells[rowIndex, 2].Value = eventItem.Time.ToString(@"hh\:mm\:ss");
+
                             if (eventItem.Time == firstEventType0.Time)
                             {
                                 if ((star_time - eventItem.Time > TimeSpan.FromMinutes(3)) && eventItem.Time < star_time)
@@ -167,9 +192,8 @@ namespace ReportSys.Pages.Services
                                     worksheet.Cells[rowIndex, 2].Style.Fill.PatternType = ExcelFillStyle.Solid;
                                     worksheet.Cells[rowIndex, 2].Style.Fill.BackgroundColor.SetColor(Color.Green);
                                 }
-
-
                             }
+
                             if (eventItem.Time == lastEventType1.Time)
                             {
                                 if ((eventItem.Time - end_time > TimeSpan.FromMinutes(3)) && eventItem.Time > end_time)
@@ -180,11 +204,7 @@ namespace ReportSys.Pages.Services
                                 }
                             }
 
-                            //отсутствие
-                            // c - worksheet.Cells[rowIndex, 5]
-                            // по - worksheet.Cells[rowIndex, 6]
-
-                            if (worksheet.Cells[rowIndex, 5].Value ==  "-" && worksheet.Cells[rowIndex, 5].Value == "-")
+                            if (worksheet.Cells[rowIndex, 5].Value == "-" && worksheet.Cells[rowIndex, 5].Value == "-")
                             {
                                 if (eventItem.Time == firstEventType0.Time)
                                 {
@@ -195,6 +215,7 @@ namespace ReportSys.Pages.Services
                                         worksheet.Cells[rowIndex, 2].Style.Fill.BackgroundColor.SetColor(Color.Orange);
                                     }
                                 }
+
                                 if (eventItem.Time == lastEventType1.Time)
                                 {
                                     if ((eventItem.Time - end_time > TimeSpan.FromMinutes(3)) && eventItem.Time > end_time)
@@ -205,38 +226,13 @@ namespace ReportSys.Pages.Services
                                     }
                                 }
                             }
-                            else
-                            {
-
-                            }
-                                                    
-
-                            //if (eventItem.Time == firstEventType0.Time && )
-                            //{
-                            //    if ((star_time - eventItem.Time > TimeSpan.FromMinutes(3)) && eventItem.Time < star_time)
-                            //    {
-                            //        // Устанавливаем цвет фона для ячейки
-                            //        worksheet.Cells[rowIndex, 2].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                            //        worksheet.Cells[rowIndex, 2].Style.Fill.BackgroundColor.SetColor(Color.Green);
-                            //    }
-                            //}
-
-                            //if (eventItem.Time == lastEventType1.Time &&)
-                            //{
-                            //    if ((eventItem.Time - end_time > TimeSpan.FromMinutes(3)) && eventItem.Time > end_time)
-                            //    {
-                            //        // Устанавливаем цвет фона для ячейки
-                            //        worksheet.Cells[rowIndex, 2].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                            //        worksheet.Cells[rowIndex, 2].Style.Fill.BackgroundColor.SetColor(Color.Green);
-                            //    }
-                            //}
 
                             worksheet.Cells[rowIndex, 3].Value = eventItem.EventType.Name;
                             worksheet.Cells[rowIndex, 4].Value = eventItem.Territory;
 
                             rowIndex++;
                         }
-                        
+
                         if (eventsForDate.Count > 0)
                         {
                             worksheet.Cells[$"E{startRow}:E{rowIndex - 1}"].Merge = true;
@@ -244,6 +240,39 @@ namespace ReportSys.Pages.Services
                             worksheet.Cells[$"G{startRow}:G{rowIndex - 1}"].Merge = true;
                         }
 
+                        
+                        
+                        if (startRow == rowIndex)
+                        {
+                            // Форматирование строк данных
+                            worksheet.Cells[$"A{startRow}:I{rowIndex }"].Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                            worksheet.Cells[$"A{startRow}:I{rowIndex }"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                            worksheet.Cells[$"A{startRow}:I{rowIndex }"].Style.WrapText = true;
+
+                            // Добавление бордера к диапазону строк данных
+                            worksheet.Cells[$"A{startRow}:I{rowIndex }"].Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                            worksheet.Cells[$"A{startRow}:I{rowIndex}"].Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                            worksheet.Cells[$"A{startRow}:I{rowIndex}"].Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                            worksheet.Cells[$"A{startRow}:I{rowIndex}"].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+
+                        }
+                        else
+                        {
+                            // Форматирование строк данных
+                            worksheet.Cells[$"A{startRow}:I{rowIndex - 1}"].Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                            worksheet.Cells[$"A{startRow}:I{rowIndex - 1}"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                            worksheet.Cells[$"A{startRow}:I{rowIndex - 1}"].Style.WrapText = true;
+
+                            // Добавление бордера к диапазону строк данных
+                            worksheet.Cells[$"A{startRow}:I{rowIndex - 1}"].Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                            worksheet.Cells[$"A{startRow}:I{rowIndex - 1}"].Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                            worksheet.Cells[$"A{startRow}:I{rowIndex - 1}"].Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                            worksheet.Cells[$"A{startRow}:I{rowIndex - 1}"].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                        }
+                        
+
+
+                        
 
                         // Если нет событий для даты, все равно добавляем строку
                         if (eventsForDate.Count == 0)
@@ -260,6 +289,7 @@ namespace ReportSys.Pages.Services
                                     worksheet.Cells[rowIndex, 5].Value = unavailabilityForDate.UnavailabilityFrom.ToShortTimeString();
                                     worksheet.Cells[rowIndex, 6].Value = unavailabilityForDate.UnavailabilityBefore.ToShortTimeString();
                                     worksheet.Cells[rowIndex, 7].Value = unavailabilityForDate.Reason;
+                                    worksheet.Cells[rowIndex, 8].Value = unavailabilityForDate.UnavailabilityType.Name;
                                 }
                                 else
                                 {
@@ -273,6 +303,17 @@ namespace ReportSys.Pages.Services
                                 worksheet.Cells[rowIndex, 7].Value = "-";
                             }
 
+
+
+                            // Добавление бордера к каждой заполненной ячейке
+                            for (int col = 1; col <= 9; col++)
+                            {
+                                worksheet.Cells[rowIndex, col].Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                                worksheet.Cells[rowIndex, col].Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                                worksheet.Cells[rowIndex, col].Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                                worksheet.Cells[rowIndex, col].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                            }
+
                             rowIndex++;
                         }
                     }
@@ -284,7 +325,16 @@ namespace ReportSys.Pages.Services
                     {
                         worksheet.Cells[$"I3:I{rowIndex - 1}"].Merge = true;
                     }
-                    
+
+                    // Форматирование столбца с личным графиком
+                    worksheet.Cells[$"I3:I{rowIndex - 1}"].Style.VerticalAlignment = ExcelVerticalAlignment.Top;
+                    worksheet.Cells[$"I3:I{rowIndex - 1}"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    worksheet.Cells[$"I3:I{rowIndex - 1}"].Style.WrapText = true;
+                    // Форматирование столбца с личным графиком
+                    worksheet.Cells[$"I3:I{rowIndex - 1}"].Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    worksheet.Cells[$"I3:I{rowIndex - 1}"].Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    worksheet.Cells[$"I3:I{rowIndex - 1}"].Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                    worksheet.Cells[$"I3:I{rowIndex - 1}"].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                 }
 
                 package.Save();

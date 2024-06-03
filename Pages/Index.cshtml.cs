@@ -36,25 +36,181 @@ namespace ReportSys.Pages
             return string.Join(" ", words);
         }
 
+        //public async Task LoadExcelFile()
+        //{
+        //    DataTable dataTable = new DataTable();
+
+        //    // Копируем загруженный файл в поток
+        //    using (var stream = new MemoryStream())
+        //    {
+        //        await Upload.CopyToAsync(stream);
+        //        using (ExcelPackage package = new ExcelPackage(stream))
+        //        {
+        //            ExcelWorksheet worksheet = package.Workbook.Worksheets[0]; // Используем первый лист
+
+        //            // Добавляем колонки
+        //            foreach (var firstRowCell in worksheet.Cells[4, 1, 4, worksheet.Dimension.End.Column])
+        //            {
+        //                dataTable.Columns.Add(firstRowCell.Text);
+        //            }
+
+        //            // Добавляем строки
+        //            for (int rowNum = 5; rowNum <= worksheet.Dimension.End.Row; rowNum++)
+        //            {
+        //                var wsRow = worksheet.Cells[rowNum, 1, rowNum, worksheet.Dimension.End.Column];
+        //                DataRow row = dataTable.NewRow();
+        //                foreach (var cell in wsRow)
+        //                {
+        //                    row[cell.Start.Column - 1] = cell.Text;
+        //                }
+        //                dataTable.Rows.Add(row);
+        //            }
+        //        }
+        //    }
+
+        //    var uniqueEmployeeNames = GetUniqueColumnValues(dataTable, "Сотрудник (Посетитель)");
+
+        //    foreach (var employeeName in uniqueEmployeeNames)
+        //    {
+        //        string[] words = employeeName.Split(' ');
+
+        //        if (words.Length < 3)
+        //        {
+        //            // Обработка случая, когда ФИО сотрудника имеет менее 3 частей
+        //            continue;
+        //        }
+
+
+        //        int id = int.Parse(RemoveExtraSpaces(GetOtherColumnValue(dataTable, "Сотрудник (Посетитель)", employeeName, "Карта №")).Trim());
+        //        string positionName = RemoveExtraSpaces(GetOtherColumnValue(dataTable, "Сотрудник (Посетитель)", employeeName, "Должность")).Trim();
+        //        string divisionOrDepartmentName = RemoveExtraSpaces(GetOtherColumnValue(dataTable, "Сотрудник (Посетитель)", employeeName, "Подразделение")).Trim();
+
+        //        try
+        //        {
+        //            var position = await _context.Positions
+        //                                         .FirstOrDefaultAsync(x => x.Name == positionName);
+
+        //            if (position == null)
+        //            {
+        //                // Обработка случая, когда позиция не найдена
+        //                Console.WriteLine($"Position not found: {positionName}");
+        //                continue;
+        //            }
+
+        //            var employee = new Employee
+        //            {
+        //                Id = id,
+        //                FirstName = words[0],
+        //                SecondName = words[1],
+        //                LastName = words[2]
+        //            };
+
+        //            var department = await _context.Departments
+        //                                            .FirstOrDefaultAsync(x => x.Name == divisionOrDepartmentName);
+
+        //            if (department != null)
+        //            {
+        //                department.Employees.Add(employee);
+        //            }
+        //            else
+        //            {
+        //                Console.WriteLine($"Department not found: {divisionOrDepartmentName}");
+        //            }
+
+
+
+        //            position.Employees.Add(employee);
+
+        //            var workSchedules = await _context.WorkSchedules.ToListAsync();
+        //            if (workSchedules.Any())
+        //            {
+        //                workSchedules[0].Employees.Add(employee);
+        //            }
+
+        //            var needrows = GetRowsByColumnValue(dataTable, "Сотрудник (Посетитель)", employeeName);
+
+        //            var events = new List<Event>();
+        //            foreach (var row in needrows) 
+        //            {
+        //                var eventtype = await _context.EventTypes
+        //                                             .FirstOrDefaultAsync(x => x.Name == row[10].ToString());
+        //                // Формат даты
+        //                string format = "d.M.yyyy";
+
+        //                // Попытка парсинга строки в объект DateOnly
+        //                if (DateOnly.TryParseExact(row[3].ToString(), format, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly result))
+        //                {
+        //                    Console.WriteLine($"Дата: {result}");
+        //                }
+        //                else
+        //                {
+        //                    Console.WriteLine("Невозможно преобразовать строку в дату.");
+        //                }
+
+
+        //                // Формат времени
+        //                string format1 = "H:mm:ss";
+
+        //                // Попытка парсинга строки в объект TimeOnly
+        //                if (TimeOnly.TryParseExact(row[4].ToString(), format1, out TimeOnly result1))
+        //                {
+        //                    Console.WriteLine($"Время: {result1}");
+        //                }
+        //                else
+        //                {
+        //                    Console.WriteLine("Невозможно преобразовать строку в время.");
+        //                }
+
+
+        //                events.Add(
+
+        //                    new Event
+        //                    {
+        //                        Date = result,
+        //                        Time = result1,
+        //                        Territory = row[8].ToString(),
+        //                        EventType = eventtype,
+        //                        Employee = employee
+        //                    }
+
+        //                    );
+
+        //            }
+
+
+        //            await _context.Events.AddRangeAsync(events);
+        //            await _context.Employees.AddAsync(employee);
+        //            await _context.SaveChangesAsync();
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            // Логирование исключения
+        //            Console.WriteLine($"An error occurred: {ex.Message}");
+        //        }
+        //    }
+        //}
+
+        // Метод для получения уникальных значений столбца 
+
         public async Task LoadExcelFile()
         {
             DataTable dataTable = new DataTable();
 
-            // Копируем загруженный файл в поток
+            // Copy the uploaded file to a stream
             using (var stream = new MemoryStream())
             {
                 await Upload.CopyToAsync(stream);
                 using (ExcelPackage package = new ExcelPackage(stream))
                 {
-                    ExcelWorksheet worksheet = package.Workbook.Worksheets[0]; // Используем первый лист
+                    ExcelWorksheet worksheet = package.Workbook.Worksheets[0]; // Use the first sheet
 
-                    // Добавляем колонки
+                    // Add columns
                     foreach (var firstRowCell in worksheet.Cells[4, 1, 4, worksheet.Dimension.End.Column])
                     {
                         dataTable.Columns.Add(firstRowCell.Text);
                     }
 
-                    // Добавляем строки
+                    // Add rows
                     for (int rowNum = 5; rowNum <= worksheet.Dimension.End.Row; rowNum++)
                     {
                         var wsRow = worksheet.Cells[rowNum, 1, rowNum, worksheet.Dimension.End.Column];
@@ -70,127 +226,119 @@ namespace ReportSys.Pages
 
             var uniqueEmployeeNames = GetUniqueColumnValues(dataTable, "Сотрудник (Посетитель)");
 
-            foreach (var employeeName in uniqueEmployeeNames)
+            using (var transaction = await _context.Database.BeginTransactionAsync())
             {
-                string[] words = employeeName.Split(' ');
+                var employeesToAdd = new List<Employee>();
+                var eventsToAdd = new List<Event>();
 
-                if (words.Length < 3)
+                foreach (var employeeName in uniqueEmployeeNames)
                 {
-                    // Обработка случая, когда ФИО сотрудника имеет менее 3 частей
-                    continue;
-                }
+                    string[] words = employeeName.Split(' ');
 
-
-                int id = int.Parse(RemoveExtraSpaces(GetOtherColumnValue(dataTable, "Сотрудник (Посетитель)", employeeName, "Карта №")).Trim());
-                string positionName = RemoveExtraSpaces(GetOtherColumnValue(dataTable, "Сотрудник (Посетитель)", employeeName, "Должность")).Trim();
-                string divisionOrDepartmentName = RemoveExtraSpaces(GetOtherColumnValue(dataTable, "Сотрудник (Посетитель)", employeeName, "Подразделение")).Trim();
-
-                try
-                {
-                    var position = await _context.Positions
-                                                 .FirstOrDefaultAsync(x => x.Name == positionName);
-
-                    if (position == null)
+                    if (words.Length < 3)
                     {
-                        // Обработка случая, когда позиция не найдена
-                        Console.WriteLine($"Position not found: {positionName}");
+                        // Handle case where employee name has less than 3 parts
                         continue;
                     }
 
-                    var employee = new Employee
+                    int id = int.Parse(RemoveExtraSpaces(GetOtherColumnValue(dataTable, "Сотрудник (Посетитель)", employeeName, "Карта №")).Trim());
+                    string positionName = RemoveExtraSpaces(GetOtherColumnValue(dataTable, "Сотрудник (Посетитель)", employeeName, "Должность")).Trim();
+                    string divisionOrDepartmentName = RemoveExtraSpaces(GetOtherColumnValue(dataTable, "Сотрудник (Посетитель)", employeeName, "Подразделение")).Trim();
+
+                    try
                     {
-                        Id = id,
-                        FirstName = words[0],
-                        SecondName = words[1],
-                        LastName = words[2]
-                    };
-                   
-                    var department = await _context.Departments
-                                                    .FirstOrDefaultAsync(x => x.Name == divisionOrDepartmentName);
+                        var position = await _context.Positions
+                                                     .FirstOrDefaultAsync(x => x.Name == positionName);
 
-                    if (department != null)
-                    {
-                        department.Employees.Add(employee);
-                    }
-                    else
-                    {
-                        Console.WriteLine($"Department not found: {divisionOrDepartmentName}");
-                    }
-                   
-                  
-
-                    position.Employees.Add(employee);
-
-                    var workSchedules = await _context.WorkSchedules.ToListAsync();
-                    if (workSchedules.Any())
-                    {
-                        workSchedules[0].Employees.Add(employee);
-                    }
-
-                    var needrows = GetRowsByColumnValue(dataTable, "Сотрудник (Посетитель)", employeeName);
-
-                    var events = new List<Event>();
-                    foreach (var row in needrows) 
-                    {
-                        var eventtype = await _context.EventTypes
-                                                     .FirstOrDefaultAsync(x => x.Name == row[10].ToString());
-                        // Формат даты
-                        string format = "d.M.yyyy";
-
-                        // Попытка парсинга строки в объект DateOnly
-                        if (DateOnly.TryParseExact(row[3].ToString(), format, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly result))
+                        if (position == null)
                         {
-                            Console.WriteLine($"Дата: {result}");
+                            // Handle case where position is not found
+                            Console.WriteLine($"Position not found: {positionName}");
+                            continue;
+                        }
+
+                        var employee = new Employee
+                        {
+                            Id = id,
+                            FirstName = words[0],
+                            SecondName = words[1],
+                            LastName = words[2]
+                        };
+
+                        var department = await _context.Departments
+                                                        .FirstOrDefaultAsync(x => x.Name == divisionOrDepartmentName);
+
+                        if (department != null)
+                        {
+                            department.Employees.Add(employee);
                         }
                         else
                         {
-                            Console.WriteLine("Невозможно преобразовать строку в дату.");
+                            Console.WriteLine($"Department not found: {divisionOrDepartmentName}");
                         }
 
+                        position.Employees.Add(employee);
 
-                        // Формат времени
-                        string format1 = "H:mm:ss";
-
-                        // Попытка парсинга строки в объект TimeOnly
-                        if (TimeOnly.TryParseExact(row[4].ToString(), format1, out TimeOnly result1))
+                        var workSchedules = await _context.WorkSchedules.ToListAsync();
+                        if (workSchedules.Any())
                         {
-                            Console.WriteLine($"Время: {result1}");
+                            workSchedules[0].Employees.Add(employee);
                         }
-                        else
+
+                        var needrows = GetRowsByColumnValue(dataTable, "Сотрудник (Посетитель)", employeeName);
+
+                        foreach (var row in needrows)
                         {
-                            Console.WriteLine("Невозможно преобразовать строку в время.");
-                        }
+                            var eventtype = await _context.EventTypes
+                                                         .FirstOrDefaultAsync(x => x.Name == row[10].ToString());
 
-
-                        events.Add(
-
-                            new Event
+                            if (DateOnly.TryParseExact(row[3].ToString(), "d.M.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateOnly dateResult) &&
+                                TimeOnly.TryParseExact(row[4].ToString(), "H:mm:ss", out TimeOnly timeResult))
                             {
-                                Date = result,
-                                Time = result1,
-                                Territory = row[8].ToString(),
-                                EventType = eventtype,
-                                Employee = employee
+                                eventsToAdd.Add(new Event
+                                {
+                                    Date = dateResult,
+                                    Time = timeResult,
+                                    Territory = row[8].ToString(),
+                                    EventType = eventtype,
+                                    Employee = employee
+                                });
                             }
+                            else
+                            {
+                                Console.WriteLine("Failed to parse date or time.");
+                            }
+                        }
 
-                            );
-
+                        employeesToAdd.Add(employee);
                     }
-
-
-                    await _context.Events.AddRangeAsync(events);
-                    await _context.Employees.AddAsync(employee);
-                    await _context.SaveChangesAsync();
+                    catch (Exception ex)
+                    {
+                        // Log exception
+                        Console.WriteLine($"An error occurred: {ex.Message}");
+                    }
                 }
-                catch (Exception ex)
+
+                // Add employees and events in batches
+                const int batchSize = 100;
+                for (int i = 0; i < employeesToAdd.Count; i += batchSize)
                 {
-                    // Логирование исключения
-                    Console.WriteLine($"An error occurred: {ex.Message}");
+                    var employeeBatch = employeesToAdd.Skip(i).Take(batchSize);
+                    await _context.Employees.AddRangeAsync(employeeBatch);
                 }
+
+                for (int i = 0; i < eventsToAdd.Count; i += batchSize)
+                {
+                    var eventBatch = eventsToAdd.Skip(i).Take(batchSize);
+                    await _context.Events.AddRangeAsync(eventBatch);
+                }
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
             }
         }
 
-        // Метод для получения уникальных значений столбца 
+
         private IEnumerable<string> GetUniqueColumnValues(DataTable dataTable, string columnName)
         {
             return dataTable.AsEnumerable()
@@ -234,6 +382,9 @@ namespace ReportSys.Pages
             //}
 
             await _context.SaveChangesAsync();
+
+            // Setting success message
+            TempData["SuccessMessage"] = "File uploaded successfully.";
             return RedirectToPage("/PageUnavailability/Index");
         }
     }

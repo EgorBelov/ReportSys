@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
+using OfficeOpenXml.Style;
 using ReportSys.DAL;
 using ReportSys.Pages.Services;
 
@@ -35,7 +36,7 @@ namespace ReportSys.Pages.PageAccess1
         [BindProperty]
         public List<int> SelectedDepartIds { get; set; }
 
-
+        public string _id { get; set; }
 
         [BindProperty]
         public DateOnly StartDate { get; set; }
@@ -53,6 +54,7 @@ namespace ReportSys.Pages.PageAccess1
         public async Task<IActionResult> OnGetAsync()
         {
             var employeeNumber = HttpContext.Session.GetString("EmployeeNumber");
+            _id = employeeNumber;
 
             if (string.IsNullOrEmpty(employeeNumber))
             {
@@ -110,10 +112,7 @@ namespace ReportSys.Pages.PageAccess1
 
         private async Task<IActionResult> HandleAction2()
         {
-
-           
-
-
+         
             if (StartDate > EndDate)
             {
                 TempData["Message"] = "Start date cannot be later than end date.";
@@ -142,8 +141,6 @@ namespace ReportSys.Pages.PageAccess1
                                                     .Include(e => e.Events).ThenInclude(s => s.EventType)
                                                     .Where(e => e.DepartmentId == employee.DepartmentId).ToListAsync();
 
-
-
             var stream = new MemoryStream();
             using (var package = new ExcelPackage(stream))
             {
@@ -155,19 +152,36 @@ namespace ReportSys.Pages.PageAccess1
                 worksheet.Cells[1, 3].Value = "ФИО";
                 worksheet.Cells[1, 4].Value = "Событие";
                 worksheet.Cells[1, 5].Value = "Время прихода ухода";
-               
 
-                
+                worksheet.Column(1).Width = 10;
+                worksheet.Column(1).Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                worksheet.Column(1).Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                worksheet.Column(2).Width = 35;
+                worksheet.Column(2).Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                worksheet.Column(2).Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                worksheet.Column(3).Width = 25;
+                worksheet.Column(3).Style.WrapText = true;
+                worksheet.Column(4).Width = 15;
+                worksheet.Column(4).Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                worksheet.Column(4).Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+
+
                 worksheet.Cells["A1:A2"].Merge = true; 
                 worksheet.Cells["B1:B2"].Merge = true; 
                 worksheet.Cells["C1:C2"].Merge = true; 
-                worksheet.Cells["D1:D2"].Merge = true; 
-               
+                worksheet.Cells["D1:D2"].Merge = true;
+
+                
+
                 for (int i = 0; i < Dates.Count(); i++)
                 {
                     worksheet.Cells[2, i + 5].Value = Dates[i];
-                }
+                    worksheet.Column(i + 5).Width = 15;
+                    worksheet.Column(i + 5).Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                    worksheet.Column(i + 5).Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
+                }
+                worksheet.Cells[$"E1:{GetExcelColumnName(Dates.Count()+4)}1"].Merge = true;
 
 
 
@@ -186,14 +200,32 @@ namespace ReportSys.Pages.PageAccess1
                 worksheet.Cells[$"{GetExcelColumnName(baseColumnIndex + 6)}1:{GetExcelColumnName(baseColumnIndex + 7)}1"].Merge = true;
 
                 worksheet.Cells[2, 5 + Dates.Count()].Value = "ед";
+                worksheet.Column(5 + Dates.Count()).Width = 10;
                 worksheet.Cells[2, 6 + Dates.Count()].Value = "%";
+                worksheet.Column(6 + Dates.Count()).Width = 10;
                 worksheet.Cells[2, 7 + Dates.Count()].Value = "ч";
+                worksheet.Column(7 + Dates.Count()).Width = 10;
                 worksheet.Cells[2, 8 + Dates.Count()].Value = "%";
+                worksheet.Column(8 + Dates.Count()).Width = 10;
                 worksheet.Cells[2, 9 + Dates.Count()].Value = "ед";
+                worksheet.Column(9 + Dates.Count()).Width = 10;
                 worksheet.Cells[2, 10 + Dates.Count()].Value = "%";
+                worksheet.Column(10 + Dates.Count()).Width = 10;
                 worksheet.Cells[2, 11 + Dates.Count()].Value = "ч";
+                worksheet.Column(11+ Dates.Count()).Width = 10;
                 worksheet.Cells[2, 12 + Dates.Count()].Value = "%";
+                worksheet.Column(12+ Dates.Count()).Width = 10;
 
+                // Форматирование ячеек заголовков
+                worksheet.Cells[$"A1:{GetExcelColumnName(12 + Dates.Count())}2"].Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                worksheet.Cells[$"A1:{GetExcelColumnName(12 + Dates.Count())}2"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+
+
+                // Добавление границ к заголовкам
+                worksheet.Cells[$"A1:{GetExcelColumnName(12 + Dates.Count())}2"].Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                worksheet.Cells[$"A1:{GetExcelColumnName(12 + Dates.Count())}2"].Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                worksheet.Cells[$"A1:{GetExcelColumnName(12 + Dates.Count())}2"].Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                worksheet.Cells[$"A1:{GetExcelColumnName(12 + Dates.Count())}2"].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
 
 
                 //var UpDepIds = FindTopLevelDepartments(SelectedDepartIds, _context);
@@ -221,6 +253,10 @@ namespace ReportSys.Pages.PageAccess1
                         worksheet.Cells[row, 1].Value = dep.Name;
                         row++;
                         worksheet.Cells[$"A{row-1}:{GetExcelColumnName(12 + Dates.Count())}{row-1}"].Merge = true;
+                        worksheet.Cells[$"A{row - 1}:{GetExcelColumnName(12 + Dates.Count())}{row - 1}"].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                        worksheet.Cells[$"A{row - 1}:{GetExcelColumnName(12 + Dates.Count())}{row - 1}"].Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                        worksheet.Cells[$"A{row - 1}:{GetExcelColumnName(12 + Dates.Count())}{row - 1}"].Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                        worksheet.Cells[$"A{row - 1}:{GetExcelColumnName(12 + Dates.Count())}{row - 1}"].Style.Border.Right.Style = ExcelBorderStyle.Thin;
                         var numPP = 0;
                         var numWorkDays = 0;
                         var numNegDevsS = 0;
@@ -359,17 +395,22 @@ namespace ReportSys.Pages.PageAccess1
                                 worksheet.Cells[row - 1, 11 + Dates.Count()].Value = timPosDevsE.ToString(@"hh\:mm\:ss");
                                 worksheet.Cells[row, 12 + Dates.Count()].Value = Math.Round(timPosDevsE.TotalHours / (numWorkDays * eightHours.TotalHours) * 100, 2);
                             }
-
+                            // Добавление бордера к каждой заполненной ячейке
+                            for (int col = 1; col <= 12 + Dates.Count(); col++)
+                            {
+                                worksheet.Cells[row-1, col].Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                                worksheet.Cells[row-1, col].Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                                worksheet.Cells[row-1, col].Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                                worksheet.Cells[row-1, col].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                                worksheet.Cells[row, col].Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                                worksheet.Cells[row, col].Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                                worksheet.Cells[row, col].Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                                worksheet.Cells[row, col].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                            }
                             row++;
                         }
+                        
                     }
-
-
-
-
-
-
-
                 }
                 else
                 {
@@ -388,6 +429,10 @@ namespace ReportSys.Pages.PageAccess1
                         worksheet.Cells[row, 1].Value = dep.Name;
                         row++;
                         worksheet.Cells[$"A{row - 1}:{GetExcelColumnName(12 + Dates.Count())}{row - 1}"].Merge = true;
+                        worksheet.Cells[$"A{row - 1}:{GetExcelColumnName(12 + Dates.Count())}{row - 1}"].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                        worksheet.Cells[$"A{row - 1}:{GetExcelColumnName(12 + Dates.Count())}{row - 1}"].Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                        worksheet.Cells[$"A{row - 1}:{GetExcelColumnName(12 + Dates.Count())}{row - 1}"].Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                        worksheet.Cells[$"A{row - 1}:{GetExcelColumnName(12 + Dates.Count())}{row - 1}"].Style.Border.Right.Style = ExcelBorderStyle.Thin;
                         var numPP = 0;
                         var numWorkDays = 0;
                         var numNegDevsS = 0;
@@ -526,9 +571,16 @@ namespace ReportSys.Pages.PageAccess1
                                 worksheet.Cells[row - 1, 11 + Dates.Count()].Value = timPosDevsE.ToString(@"hh\:mm\:ss");
                                 worksheet.Cells[row, 12 + Dates.Count()].Value = Math.Round(timPosDevsE.TotalHours / (numWorkDays * eightHours.TotalHours) * 100, 2);
                             }
-
+                            for (int col = 1; col <= 12 + Dates.Count(); col++)
+                            {
+                                worksheet.Cells[row, col].Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                                worksheet.Cells[row, col].Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                                worksheet.Cells[row, col].Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                                worksheet.Cells[row, col].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                            }
                             row++;
                         }
+                       
                     }
                 }
                 package.Save();
@@ -555,8 +607,6 @@ namespace ReportSys.Pages.PageAccess1
 
             return columnName;
         }
-
-
 
     }
 
