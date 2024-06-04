@@ -144,14 +144,15 @@ namespace ReportSys.Pages.PageAccess1
             var stream = new MemoryStream();
             using (var package = new ExcelPackage(stream))
             {
-                var worksheet = package.Workbook.Worksheets.Add("Employee");
+                var worksheet = package.Workbook.Worksheets.Add("Departments");
 
-                
-                worksheet.Cells[1, 1].Value = "ПП";
-                worksheet.Cells[1, 2].Value = "Наименование штатной должности";
-                worksheet.Cells[1, 3].Value = "ФИО";
-                worksheet.Cells[1, 4].Value = "Событие";
-                worksheet.Cells[1, 5].Value = "Время прихода ухода";
+                worksheet.Cells[1, 1].Value = $"Сведения о времени прихода на работу, уходе с работы и отсутствиях с {StartDate.ToString("dd-MM-yyyy")} по {EndDate.ToString("dd-MM-yyyy")}";
+                worksheet.Cells[2, 1].Value = $"Дата составления: {DateOnly.FromDateTime(DateTime.Now).ToString("dd-MM-yyyy")} {TimeOnly.FromDateTime(DateTime.Now).ToString("HH:mm:ss")}";
+                worksheet.Cells[3, 1].Value = "ПП";
+                worksheet.Cells[3, 2].Value = "Наименование штатной должности";
+                worksheet.Cells[3, 3].Value = "ФИО";
+                worksheet.Cells[3, 4].Value = "Событие";
+                worksheet.Cells[3, 5].Value = "Время прихода ухода";
 
                 worksheet.Column(1).Width = 10;
                 worksheet.Column(1).Style.VerticalAlignment = ExcelVerticalAlignment.Center;
@@ -164,56 +165,61 @@ namespace ReportSys.Pages.PageAccess1
                 worksheet.Column(4).Width = 15;
                 worksheet.Column(4).Style.VerticalAlignment = ExcelVerticalAlignment.Center;
                 worksheet.Column(4).Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                worksheet.Row(1).Style.HorizontalAlignment = ExcelHorizontalAlignment.Left;
+                worksheet.Row(2).Style.HorizontalAlignment = ExcelHorizontalAlignment.Left;
 
-
-                worksheet.Cells["A1:A2"].Merge = true; 
-                worksheet.Cells["B1:B2"].Merge = true; 
-                worksheet.Cells["C1:C2"].Merge = true; 
-                worksheet.Cells["D1:D2"].Merge = true;
+                worksheet.Cells["A3:A4"].Merge = true; 
+                worksheet.Cells["B3:B4"].Merge = true; 
+                worksheet.Cells["C3:C4"].Merge = true; 
+                worksheet.Cells["D3:D4"].Merge = true;
 
                 
 
                 for (int i = 0; i < Dates.Count(); i++)
                 {
-                    worksheet.Cells[2, i + 5].Value = Dates[i];
+                    worksheet.Cells[4, i + 5].Value = Dates[i];
                     worksheet.Column(i + 5).Width = 15;
                     worksheet.Column(i + 5).Style.VerticalAlignment = ExcelVerticalAlignment.Center;
                     worksheet.Column(i + 5).Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
                 }
-                worksheet.Cells[$"E1:{GetExcelColumnName(Dates.Count()+4)}1"].Merge = true;
-
+                worksheet.Cells[$"E3:{GetExcelColumnName(Dates.Count()+4)}3"].Merge = true;
+                for (var i = 6; i <= Dates.Count() + 4; i++)
+                {
+                    worksheet.Column(i).OutlineLevel = 1;
+                    worksheet.Column(i).Collapsed = true;
+                }
 
 
                 int baseColumnIndex = 5 + Dates.Count();
 
-                worksheet.Cells[1, baseColumnIndex].Value = "Кол-во \"-\" откл.";
-                worksheet.Cells[$"{GetExcelColumnName(baseColumnIndex)}1:{GetExcelColumnName(baseColumnIndex + 1)}1"].Merge = true;
+                worksheet.Cells[3, baseColumnIndex].Value = "Кол-во \"-\" откл.";
+                worksheet.Cells[$"{GetExcelColumnName(baseColumnIndex)}3:{GetExcelColumnName(baseColumnIndex + 1)}3"].Merge = true;
 
-                worksheet.Cells[1, baseColumnIndex + 2].Value = "Общее время";
-                worksheet.Cells[$"{GetExcelColumnName(baseColumnIndex + 2)}1:{GetExcelColumnName(baseColumnIndex + 3)}1"].Merge = true;
+                worksheet.Cells[3, baseColumnIndex + 2].Value = "Общее время";
+                worksheet.Cells[$"{GetExcelColumnName(baseColumnIndex + 2)}3:{GetExcelColumnName(baseColumnIndex + 3)}3"].Merge = true;
 
-                worksheet.Cells[1, baseColumnIndex + 4].Value = "Кол-во \"+\" откл.";
-                worksheet.Cells[$"{GetExcelColumnName(baseColumnIndex + 4)}1:{GetExcelColumnName(baseColumnIndex + 5)}1"].Merge = true;
+                worksheet.Cells[3, baseColumnIndex + 4].Value = "Кол-во \"+\" откл.";
+                worksheet.Cells[$"{GetExcelColumnName(baseColumnIndex + 4)}3:{GetExcelColumnName(baseColumnIndex + 5)}3"].Merge = true;
 
-                worksheet.Cells[1, baseColumnIndex + 6].Value = "Общее время";
-                worksheet.Cells[$"{GetExcelColumnName(baseColumnIndex + 6)}1:{GetExcelColumnName(baseColumnIndex + 7)}1"].Merge = true;
+                worksheet.Cells[3, baseColumnIndex + 6].Value = "Общее время";
+                worksheet.Cells[$"{GetExcelColumnName(baseColumnIndex + 6)}3:{GetExcelColumnName(baseColumnIndex + 7)}3"].Merge = true;
 
-                worksheet.Cells[2, 5 + Dates.Count()].Value = "ед";
+                worksheet.Cells[4, 5 + Dates.Count()].Value = "ед";
                 worksheet.Column(5 + Dates.Count()).Width = 10;
-                worksheet.Cells[2, 6 + Dates.Count()].Value = "%";
+                worksheet.Cells[4, 6 + Dates.Count()].Value = "%";
                 worksheet.Column(6 + Dates.Count()).Width = 10;
-                worksheet.Cells[2, 7 + Dates.Count()].Value = "ч";
+                worksheet.Cells[4, 7 + Dates.Count()].Value = "ч";
                 worksheet.Column(7 + Dates.Count()).Width = 10;
-                worksheet.Cells[2, 8 + Dates.Count()].Value = "%";
+                worksheet.Cells[4, 8 + Dates.Count()].Value = "%";
                 worksheet.Column(8 + Dates.Count()).Width = 10;
-                worksheet.Cells[2, 9 + Dates.Count()].Value = "ед";
+                worksheet.Cells[4, 9 + Dates.Count()].Value = "ед";
                 worksheet.Column(9 + Dates.Count()).Width = 10;
-                worksheet.Cells[2, 10 + Dates.Count()].Value = "%";
+                worksheet.Cells[4, 10 + Dates.Count()].Value = "%";
                 worksheet.Column(10 + Dates.Count()).Width = 10;
-                worksheet.Cells[2, 11 + Dates.Count()].Value = "ч";
+                worksheet.Cells[4, 11 + Dates.Count()].Value = "ч";
                 worksheet.Column(11+ Dates.Count()).Width = 10;
-                worksheet.Cells[2, 12 + Dates.Count()].Value = "%";
+                worksheet.Cells[4, 12 + Dates.Count()].Value = "%";
                 worksheet.Column(12+ Dates.Count()).Width = 10;
 
                 // Форматирование ячеек заголовков
@@ -222,10 +228,10 @@ namespace ReportSys.Pages.PageAccess1
 
 
                 // Добавление границ к заголовкам
-                worksheet.Cells[$"A1:{GetExcelColumnName(12 + Dates.Count())}2"].Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                worksheet.Cells[$"A1:{GetExcelColumnName(12 + Dates.Count())}2"].Style.Border.Left.Style = ExcelBorderStyle.Thin;
-                worksheet.Cells[$"A1:{GetExcelColumnName(12 + Dates.Count())}2"].Style.Border.Right.Style = ExcelBorderStyle.Thin;
-                worksheet.Cells[$"A1:{GetExcelColumnName(12 + Dates.Count())}2"].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                worksheet.Cells[$"A3:{GetExcelColumnName(12 + Dates.Count())}4"].Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                worksheet.Cells[$"A3:{GetExcelColumnName(12 + Dates.Count())}4"].Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                worksheet.Cells[$"A3:{GetExcelColumnName(12 + Dates.Count())}4"].Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                worksheet.Cells[$"A3:{GetExcelColumnName(12 + Dates.Count())}4"].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
 
 
                 //var UpDepIds = FindTopLevelDepartments(SelectedDepartIds, _context);
@@ -233,7 +239,7 @@ namespace ReportSys.Pages.PageAccess1
                         .Where(e => SelectedDepartIds.Contains(e.UpperDepartmentId))
                         .ToListAsync();
 
-                int row = 3;
+                int row = 5;
 
 
                 if (UpDepIds.Count() == 0)
@@ -251,6 +257,8 @@ namespace ReportSys.Pages.PageAccess1
 
 
                         worksheet.Cells[row, 1].Value = dep.Name;
+                        worksheet.Cells[row, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Left;
+                        worksheet.Row(row).Style.HorizontalAlignment = ExcelHorizontalAlignment.Left;
                         row++;
                         worksheet.Cells[$"A{row-1}:{GetExcelColumnName(12 + Dates.Count())}{row-1}"].Merge = true;
                         worksheet.Cells[$"A{row - 1}:{GetExcelColumnName(12 + Dates.Count())}{row - 1}"].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
@@ -327,7 +335,7 @@ namespace ReportSys.Pages.PageAccess1
 
                                     if (firstEventType0 != null)
                                     {
-                                        worksheet.Cells[row - 1, i].Value = firstEventType0.Time.ToString("HH:mm:ss"); ;
+                                        worksheet.Cells[row - 1, i].Value = firstEventType0.Time.ToString("HH:mm:ss");
                                         if (firstEventType0.Time - startTime > TimeSpan.FromMinutes(3) && firstEventType0.Time > startTime)
                                         {
                                             numNegDevsS++;
@@ -417,7 +425,7 @@ namespace ReportSys.Pages.PageAccess1
                     foreach (var deP in UpDepIds)
                     {
                         var datesSet = new HashSet<DateOnly>(Dates); // Преобразуем список дат в HashSet для быстрой проверки
-                        var depId = deP.Id;
+                        var depId = deP.LowerDepartmentId;
                         var dep = await _context.Departments
                             .Include(d => d.Employees).ThenInclude(e => e.Unavailabilitys)
                             .Include(d => d.Employees).ThenInclude(e => e.Position)
@@ -427,6 +435,8 @@ namespace ReportSys.Pages.PageAccess1
 
 
                         worksheet.Cells[row, 1].Value = dep.Name;
+                        worksheet.Cells[row, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Left;
+                        worksheet.Row(row).Style.HorizontalAlignment = ExcelHorizontalAlignment.Left;
                         row++;
                         worksheet.Cells[$"A{row - 1}:{GetExcelColumnName(12 + Dates.Count())}{row - 1}"].Merge = true;
                         worksheet.Cells[$"A{row - 1}:{GetExcelColumnName(12 + Dates.Count())}{row - 1}"].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
@@ -536,7 +546,18 @@ namespace ReportSys.Pages.PageAccess1
                                     {
                                         numWorkDays++;
                                     }
-
+                                    // Добавление бордера к каждой заполненной ячейке
+                                    for (int col = 1; col <= 12 + Dates.Count(); col++)
+                                    {
+                                        worksheet.Cells[i - 1, col].Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                                        worksheet.Cells[i - 1, col].Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                                        worksheet.Cells[i - 1, col].Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                                        worksheet.Cells[i - 1, col].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                                        worksheet.Cells[i, col].Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                                        worksheet.Cells[i, col].Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                                        worksheet.Cells[i, col].Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                                        worksheet.Cells[i, col].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                                    }
                                     i++;
                                 }
 
@@ -583,10 +604,12 @@ namespace ReportSys.Pages.PageAccess1
                        
                     }
                 }
+                worksheet.Row(1).Style.HorizontalAlignment = ExcelHorizontalAlignment.Left;
+                worksheet.Row(2).Style.HorizontalAlignment = ExcelHorizontalAlignment.Left;
                 package.Save();
             }
             stream.Position = 0;
-            var fileName = "Employee.xlsx";
+            var fileName = "Departments.xlsx";
             var contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
             return File(stream, contentType, fileName);
         

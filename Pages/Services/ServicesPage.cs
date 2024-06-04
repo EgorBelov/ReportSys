@@ -9,6 +9,7 @@ using OfficeOpenXml.Style;
 using System.Drawing;
 using ReportSys.DAL;
 using ReportSys.DAL.Entities;
+using System.Globalization;
 
 namespace ReportSys.Pages.Services
 {
@@ -92,37 +93,40 @@ namespace ReportSys.Pages.Services
 
                     var worksheet = package.Workbook.Worksheets.Add(employeeNumber);
 
+                    worksheet.Cells[1, 1].Value = $"Сведения по событиям доступа с {startDate.ToString("dd-MM-yyyy")} по {endDate.ToString("dd-MM-yyyy")} по {employee.FirstName + " " + employee.SecondName + " " + employee.LastName}";
+                    worksheet.Cells[2, 1].Value = $"Дата составления: {DateOnly.FromDateTime(DateTime.Now).ToString("dd-MM-yyyy")} {TimeOnly.FromDateTime(DateTime.Now).ToString("HH:mm:ss")}";
                     // Заголовки столбцов
-                    worksheet.Cells[1, 1].Value = "Дата";
-                    worksheet.Cells[1, 2].Value = "Время";
-                    worksheet.Cells[1, 3].Value = "Событие";
-                    worksheet.Cells[1, 4].Value = "Территория";
-                    worksheet.Cells[1, 5].Value = "Отсутствие по ЖМК";
-                    worksheet.Cells[1, 8].Value = "По табелю рабочего времени";
-                    worksheet.Cells[1, 9].Value = "Личный график";
-                    worksheet.Cells[2, 5].Value = "c";
-                    worksheet.Cells[2, 6].Value = "по";
-                    worksheet.Cells[2, 7].Value = "основание";
+                    worksheet.Cells[3, 1].Value = "Дата";
+                    worksheet.Cells[3, 2].Value = "Время";
+                    worksheet.Cells[3, 3].Value = "Событие";
+                    worksheet.Cells[3, 4].Value = "Территория";
+                    worksheet.Cells[3, 5].Value = "Отсутствие по ЖМК";
+                    worksheet.Cells[3, 8].Value = "По табелю рабочего времени";
+                    worksheet.Cells[3, 9].Value = "Личный график";
+                    worksheet.Cells[4, 5].Value = "c";
+                    worksheet.Cells[4, 6].Value = "по";
+                    worksheet.Cells[4, 7].Value = "основание";
 
                     // Объединение ячеек для заголовков
-                    worksheet.Cells["A1:A2"].Merge = true;
-                    worksheet.Cells["B1:B2"].Merge = true;
-                    worksheet.Cells["C1:C2"].Merge = true;
-                    worksheet.Cells["D1:D2"].Merge = true;
-                    worksheet.Cells["H1:H2"].Merge = true;
-                    worksheet.Cells["I1:I2"].Merge = true;
-                    worksheet.Cells["E1:G1"].Merge = true;
+                    worksheet.Cells["A3:A4"].Merge = true;
+                    worksheet.Cells["B3:B4"].Merge = true;
+                    worksheet.Cells["C3:C4"].Merge = true;
+                    worksheet.Cells["D3:D4"].Merge = true;
+                    worksheet.Cells["H3:H4"].Merge = true;
+                    worksheet.Cells["I3:I4"].Merge = true;
+                    worksheet.Cells["E3:G3"].Merge = true;
 
                     // Форматирование ячеек заголовков
-                    worksheet.Cells["A1:I2"].Style.VerticalAlignment = ExcelVerticalAlignment.Center;
-                    worksheet.Cells["A1:I2"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-
+                    worksheet.Cells["A3:I4"].Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                    worksheet.Cells["A3:I4"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    worksheet.Row(1).Style.HorizontalAlignment = ExcelHorizontalAlignment.Left;
+                    worksheet.Row(2).Style.HorizontalAlignment = ExcelHorizontalAlignment.Left;
 
                     // Добавление границ к заголовкам
-                    worksheet.Cells["A1:I2"].Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                    worksheet.Cells["A1:I2"].Style.Border.Left.Style = ExcelBorderStyle.Thin;
-                    worksheet.Cells["A1:I2"].Style.Border.Right.Style = ExcelBorderStyle.Thin;
-                    worksheet.Cells["A1:I2"].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                    worksheet.Cells["A3:I4"].Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    worksheet.Cells["A3:I4"].Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    worksheet.Cells["A3:I4"].Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                    worksheet.Cells["A3:I4"].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
 
 
                     worksheet.Column(1).Width = 15;
@@ -136,7 +140,7 @@ namespace ReportSys.Pages.Services
                     worksheet.Column(8).Style.WrapText = true;
                     worksheet.Column(9).Width = 25;
 
-                    int rowIndex = 3; // Начинаем с третьей строки, так как первые две заняты заголовками
+                    int rowIndex = 5; // Начинаем с третьей строки, так как первые две заняты заголовками
 
                     // Проход по дням в выбранном промежутке, пропуская выходные
                     for (var date = startDate; date <= endDate; date = date.AddDays(1))
@@ -146,7 +150,7 @@ namespace ReportSys.Pages.Services
                             continue; // Пропускаем субботу и воскресенье
                         }
 
-                        var eventsForDate = employee.Events.Where(e => e.Date == date).ToList();
+                        var eventsForDate = employee.Events.Where(e => e.Date == date).OrderBy(e => e.Time).ToList();
                         var unavailabilityForDate = employee.Unavailabilitys
                             .FirstOrDefault(u => u.Date == date && u.EmployeeId == employee.Id);
 
@@ -167,6 +171,8 @@ namespace ReportSys.Pages.Services
                             else
                             {
                                 worksheet.Cells[rowIndex, 8].Value = unavailabilityForDate.UnavailabilityType.Name;
+                                
+                               
                             }
                         }
                         else
@@ -181,51 +187,124 @@ namespace ReportSys.Pages.Services
 
                         foreach (var eventItem in eventsForDate)
                         {
-                            worksheet.Cells[rowIndex, 1].Value = eventItem.Date.ToString("yyyy-MM-dd");
-                            worksheet.Cells[rowIndex, 2].Value = eventItem.Time.ToString(@"hh\:mm\:ss");
+                            worksheet.Cells[rowIndex, 1].Value = eventItem.Date.ToString("dd-MM-yyyy");
+                            worksheet.Cells[rowIndex, 2].Value = eventItem.Time.ToString("HH:mm:ss");
 
-                            if (eventItem.Time == firstEventType0.Time)
+                            if (unavailabilityForDate != null)
                             {
-                                if ((star_time - eventItem.Time > TimeSpan.FromMinutes(3)) && eventItem.Time < star_time)
+                                if (unavailabilityForDate.UnavailabilityType.Id == 4)
                                 {
-                                    // Устанавливаем цвет фона для ячейки
-                                    worksheet.Cells[rowIndex, 2].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                                    worksheet.Cells[rowIndex, 2].Style.Fill.BackgroundColor.SetColor(Color.Green);
+                                    worksheet.Cells[rowIndex, 5].Value = unavailabilityForDate.UnavailabilityFrom.ToShortTimeString();
+                                    worksheet.Cells[rowIndex, 6].Value = unavailabilityForDate.UnavailabilityBefore.ToShortTimeString();
+                                    worksheet.Cells[rowIndex, 7].Value = unavailabilityForDate.Reason;
+                                    worksheet.Cells[rowIndex, 8].Value = unavailabilityForDate.UnavailabilityType.Name;
+                                }
+                                else
+                                {
+                                    worksheet.Cells[rowIndex, 8].Value = unavailabilityForDate.UnavailabilityType.Name;
                                 }
                             }
-
-                            if (eventItem.Time == lastEventType1.Time)
+                            else
                             {
-                                if ((eventItem.Time - end_time > TimeSpan.FromMinutes(3)) && eventItem.Time > end_time)
-                                {
-                                    // Устанавливаем цвет фона для ячейки
-                                    worksheet.Cells[rowIndex, 2].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                                    worksheet.Cells[rowIndex, 2].Style.Fill.BackgroundColor.SetColor(Color.Green);
-                                }
+                                worksheet.Cells[rowIndex, 5].Value = "-";
+                                worksheet.Cells[rowIndex, 6].Value = "-";
+                                worksheet.Cells[rowIndex, 7].Value = "-";
                             }
-
-                            if (worksheet.Cells[rowIndex, 5].Value == "-" && worksheet.Cells[rowIndex, 5].Value == "-")
+                            if (worksheet.Cells[rowIndex, 8].Value != null)
+                            {
+                                colorCell(worksheet, rowIndex, Color.Blue);
+                            }
+                            else
                             {
                                 if (eventItem.Time == firstEventType0.Time)
                                 {
                                     if ((star_time - eventItem.Time > TimeSpan.FromMinutes(3)) && eventItem.Time < star_time)
                                     {
-                                        // Устанавливаем цвет фона для ячейки
-                                        worksheet.Cells[rowIndex, 2].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                                        worksheet.Cells[rowIndex, 2].Style.Fill.BackgroundColor.SetColor(Color.Orange);
+                                        colorCell(worksheet, rowIndex, Color.Green);
+                                    }
+                                    else
+                                    {
+                                        if (worksheet.Cells[rowIndex, 5].Value != " - " && worksheet.Cells[rowIndex, 6].Value != "-" && worksheet.Cells[rowIndex, 5].Value != null && worksheet.Cells[rowIndex, 6].Value != null)
+                                        {
+                                            if (toTimeOnly(worksheet.Cells[rowIndex, 5].Value.ToString()) <= eventItem.Time && eventItem.Time <= toTimeOnly(worksheet.Cells[rowIndex, 6].Value.ToString()))
+                                            {
+                                                colorCell(worksheet, rowIndex, Color.Yellow);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            colorCell(worksheet, rowIndex, Color.Orange);
+                                        }
                                     }
                                 }
-
-                                if (eventItem.Time == lastEventType1.Time)
+                                else
                                 {
-                                    if ((eventItem.Time - end_time > TimeSpan.FromMinutes(3)) && eventItem.Time > end_time)
+                                    if (worksheet.Cells[rowIndex, 5].Value != "-" && worksheet.Cells[rowIndex, 6].Value != "-" && worksheet.Cells[rowIndex, 5].Value != null && worksheet.Cells[rowIndex, 6].Value != null)
                                     {
-                                        // Устанавливаем цвет фона для ячейки
-                                        worksheet.Cells[rowIndex, 2].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                                        worksheet.Cells[rowIndex, 2].Style.Fill.BackgroundColor.SetColor(Color.Orange);
+                                        
+                                        if (toTimeOnly(worksheet.Cells[rowIndex, 5].Value.ToString()) <= eventItem.Time && eventItem.Time <= toTimeOnly(worksheet.Cells[rowIndex, 6].Value.ToString()))
+                                        {
+                                            colorCell(worksheet, rowIndex, Color.Yellow);
+                                        }
+                                        
+                                    }
+                                    else
+                                    {
+                                        if (eventItem.Time > star_time && (eventItem.Time <= employee.WorkSchedule.LunchStart || eventItem.Time >= employee.WorkSchedule.LunchEnd) && eventItem.Time <= end_time)
+                                        {
+                                            colorCell(worksheet, rowIndex, Color.Orange);
+                                        }
+                                        if (eventItem.Time < star_time || eventItem.Time > end_time)
+                                        {
+                                            colorCell(worksheet, rowIndex, Color.Green);
+                                        }
                                     }
                                 }
                             }
+                           
+
+                            //if (eventItem.Time == firstEventType0.Time)
+                            //{
+                            //    if ((star_time - eventItem.Time > TimeSpan.FromMinutes(3)) && eventItem.Time < star_time)
+                            //    {
+                            //        // Устанавливаем цвет фона для ячейки
+                            //        worksheet.Cells[rowIndex, 2].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                            //        worksheet.Cells[rowIndex, 2].Style.Fill.BackgroundColor.SetColor(Color.Green);
+                            //    }
+                            //}
+
+                            //if (eventItem.Time == lastEventType1.Time)
+                            //{
+                            //    if ((eventItem.Time - end_time > TimeSpan.FromMinutes(3)) && eventItem.Time > end_time)
+                            //    {
+                            //        // Устанавливаем цвет фона для ячейки
+                            //        worksheet.Cells[rowIndex, 2].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                            //        worksheet.Cells[rowIndex, 2].Style.Fill.BackgroundColor.SetColor(Color.Green);
+                            //    }
+                            //}
+
+                            //if (worksheet.Cells[rowIndex, 5].Value == "-" && worksheet.Cells[rowIndex, 5].Value == "-")
+                            //{
+                            //    if (eventItem.Time == firstEventType0.Time)
+                            //    {
+                            //        if ((star_time - eventItem.Time > TimeSpan.FromMinutes(3)) && eventItem.Time < star_time)
+                            //        {
+                            //            // Устанавливаем цвет фона для ячейки
+                            //            worksheet.Cells[rowIndex, 2].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                            //            worksheet.Cells[rowIndex, 2].Style.Fill.BackgroundColor.SetColor(Color.Orange);
+                            //        }
+                            //    }
+
+                            //    if (eventItem.Time == lastEventType1.Time)
+                            //    {
+                            //        if ((eventItem.Time - end_time > TimeSpan.FromMinutes(3)) && eventItem.Time > end_time)
+                            //        {
+                            //            // Устанавливаем цвет фона для ячейки
+                            //            worksheet.Cells[rowIndex, 2].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                            //            worksheet.Cells[rowIndex, 2].Style.Fill.BackgroundColor.SetColor(Color.Orange);
+                            //        }
+                            //    }
+                            //}
 
                             worksheet.Cells[rowIndex, 3].Value = eventItem.EventType.Name;
                             worksheet.Cells[rowIndex, 4].Value = eventItem.Territory;
@@ -316,26 +395,27 @@ namespace ReportSys.Pages.Services
 
                             rowIndex++;
                         }
+
                     }
 
                     var str = employee.WorkSchedule.GetScheduleString();
-                    worksheet.Cells[3, 9].Value = str;
+                    worksheet.Cells[5, 9].Value = str;
 
                     if (rowIndex != 3)
                     {
-                        worksheet.Cells[$"I3:I{rowIndex - 1}"].Merge = true;
+                        worksheet.Cells[$"I5:I{rowIndex - 1}"].Merge = true;
                     }
 
                     // Форматирование столбца с личным графиком
-                    worksheet.Cells[$"I3:I{rowIndex - 1}"].Style.VerticalAlignment = ExcelVerticalAlignment.Top;
-                    worksheet.Cells[$"I3:I{rowIndex - 1}"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-                    worksheet.Cells[$"I3:I{rowIndex - 1}"].Style.WrapText = true;
+                    worksheet.Cells[$"I5:I{rowIndex - 1}"].Style.VerticalAlignment = ExcelVerticalAlignment.Top;
+                    worksheet.Cells[$"I5:I{rowIndex - 1}"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    worksheet.Cells[$"I5:I{rowIndex - 1}"].Style.WrapText = true;
                     // Форматирование столбца с личным графиком
-                    worksheet.Cells[$"I3:I{rowIndex - 1}"].Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                    worksheet.Cells[$"I3:I{rowIndex - 1}"].Style.Border.Left.Style = ExcelBorderStyle.Thin;
-                    worksheet.Cells[$"I3:I{rowIndex - 1}"].Style.Border.Right.Style = ExcelBorderStyle.Thin;
-                    worksheet.Cells[$"I3:I{rowIndex - 1}"].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
-                }
+                    worksheet.Cells[$"I5:I{rowIndex - 1}"].Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    worksheet.Cells[$"I5:I{rowIndex - 1}"].Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    worksheet.Cells[$"I5:I{rowIndex - 1}"].Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                    worksheet.Cells[$"I5:I{rowIndex - 1}"].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                }   
 
                 package.Save();
             }
@@ -386,6 +466,25 @@ namespace ReportSys.Pages.Services
             }
 
             return topLevelDepartments; // Возвращаем список департаментов высшего уровня
+        }
+
+        public static TimeOnly toTimeOnly(string row)
+        {
+            string[] formatsTime = { "H.mm.ss", "h:mm:ss tt", "HH:mm:ss", "h:mm tt" };
+            if (TimeOnly.TryParseExact(row, formatsTime, CultureInfo.InvariantCulture, DateTimeStyles.None, out TimeOnly result1))
+            {
+                return result1;
+            }
+            else
+            {
+                return new TimeOnly(0);
+            }
+        }
+
+        public static void colorCell(ExcelWorksheet worksheet, int rowIndex, Color color)
+        {
+            worksheet.Cells[rowIndex, 2].Style.Fill.PatternType = ExcelFillStyle.Solid;
+            worksheet.Cells[rowIndex, 2].Style.Fill.BackgroundColor.SetColor(color);
         }
 
     }
