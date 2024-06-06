@@ -91,7 +91,7 @@ namespace ReportSys.Pages.Services
                     var star_time = employee.WorkSchedule.Arrival;
                     var end_time = employee.WorkSchedule.Exit;
 
-                    var worksheet = package.Workbook.Worksheets.Add(employeeNumber);
+                    var worksheet = package.Workbook.Worksheets.Add(employee.FirstName);
 
                     worksheet.Cells[1, 1].Value = $"Сведения по событиям доступа с {startDate.ToString("dd-MM-yyyy")} по {endDate.ToString("dd-MM-yyyy")} по {employee.FirstName + " " + employee.SecondName + " " + employee.LastName}";
                     worksheet.Cells[2, 1].Value = $"Дата составления: {DateOnly.FromDateTime(DateTime.Now).ToString("dd-MM-yyyy")} {TimeOnly.FromDateTime(DateTime.Now).ToString("HH:mm:ss")}";
@@ -212,13 +212,13 @@ namespace ReportSys.Pages.Services
                             }
                             if (worksheet.Cells[rowIndex, 8].Value != null)
                             {
-                                colorCell(worksheet, rowIndex, Color.Blue);
+                                colorCell(worksheet, rowIndex, Color.SkyBlue);
                             }
                             else
                             {
                                 if((star_time - eventItem.Time >= TimeSpan.FromMinutes(3) && eventItem.Time < star_time) || (eventItem.Time - end_time >= TimeSpan.FromMinutes(3) && eventItem.Time > end_time))
                                 {
-                                    colorCell(worksheet, rowIndex, Color.Green);
+                                    colorCell(worksheet, rowIndex, Color.LightGreen);
                                 }
                                 else
                                 {
@@ -230,12 +230,12 @@ namespace ReportSys.Pages.Services
                                         }
                                         else if ((eventItem.Time - star_time >= TimeSpan.FromMinutes(3) && eventItem.Time > star_time) && (end_time - eventItem.Time >= TimeSpan.FromMinutes(3) && eventItem.Time < end_time) && (eventItem.Time <= employee.WorkSchedule.LunchStart || eventItem.Time >= employee.WorkSchedule.LunchEnd))
                                         {
-                                            colorCell(worksheet, rowIndex, Color.Orange);
+                                            colorCell(worksheet, rowIndex, Color.SandyBrown);
                                         }
                                     }
                                     else if ( (eventItem.Time - star_time >= TimeSpan.FromMinutes(3) && eventItem.Time > star_time) && (end_time - eventItem.Time >= TimeSpan.FromMinutes(3) && eventItem.Time < end_time) && (eventItem.Time <= employee.WorkSchedule.LunchStart || eventItem.Time >= employee.WorkSchedule.LunchEnd) )
                                     {
-                                        colorCell(worksheet, rowIndex, Color.Orange);
+                                        colorCell(worksheet, rowIndex, Color.SandyBrown);
                                     }
                                 }
                             }
@@ -453,6 +453,9 @@ namespace ReportSys.Pages.Services
             return File(stream, contentType, fileName);
         }
 
+
+
+
         public List<Department> FindTopLevelDepartments(List<int> departmentIds, ReportSysContext _context)
         {
             // Получаем все департаменты из списка с их иерархией
@@ -513,7 +516,37 @@ namespace ReportSys.Pages.Services
             worksheet.Cells[rowIndex, 2].Style.Fill.PatternType = ExcelFillStyle.Solid;
             worksheet.Cells[rowIndex, 2].Style.Fill.BackgroundColor.SetColor(color);
         }
+        public static void colorCell(ExcelWorksheet worksheet, int rowIndex, int column, Color color)
+        {
+            worksheet.Cells[rowIndex, column].Style.Fill.PatternType = ExcelFillStyle.Solid;
+            worksheet.Cells[rowIndex, column].Style.Fill.BackgroundColor.SetColor(color);
+        }
 
+        public string GetExcelColumnName(int columnNumber)
+        {
+            int dividend = columnNumber;
+            string columnName = string.Empty;
+            int modulo;
+
+            while (dividend > 0)
+            {
+                modulo = (dividend - 1) % 26;
+                columnName = Convert.ToChar(65 + modulo).ToString() + columnName;
+                dividend = (dividend - modulo) / 26;
+            }
+
+            return columnName;
+        }
+
+        public static string FormatTimeSpan(TimeSpan timeSpan)
+        {
+            int totalHours = (int)timeSpan.TotalHours; // Получаем общее количество часов
+            int minutes = timeSpan.Minutes;
+            int seconds = timeSpan.Seconds;
+
+            // Форматируем строку
+            return $"{totalHours:D2}:{minutes:D2}:{seconds:D2}";
+        }
     }
 
 }

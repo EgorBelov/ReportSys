@@ -39,7 +39,7 @@
     </script>
 </head>
 <body>
-    <h2>{@Model._id}</h2>
+    <h2>@Model._name</h2>
 
     <form method="post">
         <div class="form-group">
@@ -65,8 +65,8 @@
             <input type="date" id="endDate" name="endDate" class="form-control" asp-for="EndDate" />
         </div>
 
-        <button type="submit" name="action" value="Action1" class="btn btn-primary" disabled>Action 1</button>
-        <button type="submit" name="action" value="Action2" class="btn btn-secondary" disabled>Action 2</button>
+        <button type="submit" name="action" value="Action1" class="btn btn-primary" disabled>Отчет по сотрудникам</button>
+        <button type="submit" name="action" value="Action2" class="btn btn-secondary" disabled>Отчет по отделам</button>
     </form>
 
     @if (TempData["Message"] != null)
