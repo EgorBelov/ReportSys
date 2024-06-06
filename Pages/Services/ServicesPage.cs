@@ -197,7 +197,7 @@ namespace ReportSys.Pages.Services
                                     worksheet.Cells[rowIndex, 5].Value = unavailabilityForDate.UnavailabilityFrom.ToShortTimeString();
                                     worksheet.Cells[rowIndex, 6].Value = unavailabilityForDate.UnavailabilityBefore.ToShortTimeString();
                                     worksheet.Cells[rowIndex, 7].Value = unavailabilityForDate.Reason;
-                                    worksheet.Cells[rowIndex, 8].Value = unavailabilityForDate.UnavailabilityType.Name;
+                                    //worksheet.Cells[rowIndex, 8].Value = unavailabilityForDate.UnavailabilityType.Name;
                                 }
                                 else
                                 {
@@ -216,51 +216,78 @@ namespace ReportSys.Pages.Services
                             }
                             else
                             {
-                                if (eventItem.Time == firstEventType0.Time)
+                                if((star_time - eventItem.Time >= TimeSpan.FromMinutes(3) && eventItem.Time < star_time) || (eventItem.Time - end_time >= TimeSpan.FromMinutes(3) && eventItem.Time > end_time))
                                 {
-                                    if ((star_time - eventItem.Time > TimeSpan.FromMinutes(3)) && eventItem.Time < star_time)
-                                    {
-                                        colorCell(worksheet, rowIndex, Color.Green);
-                                    }
-                                    else
-                                    {
-                                        if (worksheet.Cells[rowIndex, 5].Value != " - " && worksheet.Cells[rowIndex, 6].Value != "-" && worksheet.Cells[rowIndex, 5].Value != null && worksheet.Cells[rowIndex, 6].Value != null)
-                                        {
-                                            if (toTimeOnly(worksheet.Cells[rowIndex, 5].Value.ToString()) <= eventItem.Time && eventItem.Time <= toTimeOnly(worksheet.Cells[rowIndex, 6].Value.ToString()))
-                                            {
-                                                colorCell(worksheet, rowIndex, Color.Yellow);
-                                            }
-                                        }
-                                        else
-                                        {
-                                            colorCell(worksheet, rowIndex, Color.Orange);
-                                        }
-                                    }
+                                    colorCell(worksheet, rowIndex, Color.Green);
                                 }
                                 else
                                 {
                                     if (worksheet.Cells[rowIndex, 5].Value != "-" && worksheet.Cells[rowIndex, 6].Value != "-" && worksheet.Cells[rowIndex, 5].Value != null && worksheet.Cells[rowIndex, 6].Value != null)
                                     {
-                                        
                                         if (toTimeOnly(worksheet.Cells[rowIndex, 5].Value.ToString()) <= eventItem.Time && eventItem.Time <= toTimeOnly(worksheet.Cells[rowIndex, 6].Value.ToString()))
                                         {
                                             colorCell(worksheet, rowIndex, Color.Yellow);
                                         }
-                                        
-                                    }
-                                    else
-                                    {
-                                        if (eventItem.Time > star_time && (eventItem.Time <= employee.WorkSchedule.LunchStart || eventItem.Time >= employee.WorkSchedule.LunchEnd) && eventItem.Time <= end_time)
+                                        else if ((eventItem.Time - star_time >= TimeSpan.FromMinutes(3) && eventItem.Time > star_time) && (end_time - eventItem.Time >= TimeSpan.FromMinutes(3) && eventItem.Time < end_time) && (eventItem.Time <= employee.WorkSchedule.LunchStart || eventItem.Time >= employee.WorkSchedule.LunchEnd))
                                         {
                                             colorCell(worksheet, rowIndex, Color.Orange);
                                         }
-                                        if (eventItem.Time < star_time || eventItem.Time > end_time)
-                                        {
-                                            colorCell(worksheet, rowIndex, Color.Green);
-                                        }
+                                    }
+                                    else if ( (eventItem.Time - star_time >= TimeSpan.FromMinutes(3) && eventItem.Time > star_time) && (end_time - eventItem.Time >= TimeSpan.FromMinutes(3) && eventItem.Time < end_time) && (eventItem.Time <= employee.WorkSchedule.LunchStart || eventItem.Time >= employee.WorkSchedule.LunchEnd) )
+                                    {
+                                        colorCell(worksheet, rowIndex, Color.Orange);
                                     }
                                 }
                             }
+
+
+                            //else
+                            //{
+                            //    if (eventItem.Time == firstEventType0.Time)
+                            //    {
+                            //        if ((star_time - eventItem.Time > TimeSpan.FromMinutes(3)) && eventItem.Time < star_time)
+                            //        {
+                            //            colorCell(worksheet, rowIndex, Color.Green);
+                            //        }
+                            //        else
+                            //        {
+                            //            if (worksheet.Cells[rowIndex, 5].Value != " - " && worksheet.Cells[rowIndex, 6].Value != "-" && worksheet.Cells[rowIndex, 5].Value != null && worksheet.Cells[rowIndex, 6].Value != null)
+                            //            {
+                            //                if (toTimeOnly(worksheet.Cells[rowIndex, 5].Value.ToString()) <= eventItem.Time && eventItem.Time <= toTimeOnly(worksheet.Cells[rowIndex, 6].Value.ToString()))
+                            //                {
+                            //                    colorCell(worksheet, rowIndex, Color.Yellow);
+                            //                }
+                            //            }
+                            //            else
+                            //            {
+                            //                colorCell(worksheet, rowIndex, Color.Orange);
+                            //            }
+                            //        }
+                            //    }
+                            //    else
+                            //    {
+                            //        if (worksheet.Cells[rowIndex, 5].Value != "-" && worksheet.Cells[rowIndex, 6].Value != "-" && worksheet.Cells[rowIndex, 5].Value != null && worksheet.Cells[rowIndex, 6].Value != null)
+                            //        {
+                                        
+                            //            if (toTimeOnly(worksheet.Cells[rowIndex, 5].Value.ToString()) <= eventItem.Time && eventItem.Time <= toTimeOnly(worksheet.Cells[rowIndex, 6].Value.ToString()))
+                            //            {
+                            //                colorCell(worksheet, rowIndex, Color.Yellow);
+                            //            }
+                                        
+                            //        }
+                            //        else
+                            //        {
+                            //            if (eventItem.Time > star_time && (eventItem.Time <= employee.WorkSchedule.LunchStart || eventItem.Time >= employee.WorkSchedule.LunchEnd) && eventItem.Time <= end_time)
+                            //            {
+                            //                colorCell(worksheet, rowIndex, Color.Orange);
+                            //            }
+                            //            if (eventItem.Time < star_time || eventItem.Time > end_time)
+                            //            {
+                            //                colorCell(worksheet, rowIndex, Color.Green);
+                            //            }
+                            //        }
+                            //    }
+                            //}
                            
 
                             //if (eventItem.Time == firstEventType0.Time)
@@ -368,7 +395,7 @@ namespace ReportSys.Pages.Services
                                     worksheet.Cells[rowIndex, 5].Value = unavailabilityForDate.UnavailabilityFrom.ToShortTimeString();
                                     worksheet.Cells[rowIndex, 6].Value = unavailabilityForDate.UnavailabilityBefore.ToShortTimeString();
                                     worksheet.Cells[rowIndex, 7].Value = unavailabilityForDate.Reason;
-                                    worksheet.Cells[rowIndex, 8].Value = unavailabilityForDate.UnavailabilityType.Name;
+                                    //worksheet.Cells[rowIndex, 8].Value = unavailabilityForDate.UnavailabilityType.Name;
                                 }
                                 else
                                 {
@@ -470,7 +497,7 @@ namespace ReportSys.Pages.Services
 
         public static TimeOnly toTimeOnly(string row)
         {
-            string[] formatsTime = { "H.mm.ss", "h:mm:ss tt", "HH:mm:ss", "h:mm tt" };
+            string[] formatsTime = { "H.mm.ss", "h:mm:ss tt", "HH:mm:ss", "h:mm tt", "h:mm", "HH:mm","h:mm tt" };
             if (TimeOnly.TryParseExact(row, formatsTime, CultureInfo.InvariantCulture, DateTimeStyles.None, out TimeOnly result1))
             {
                 return result1;
