@@ -8,18 +8,58 @@
 <form method="post">
     <div class="form-group">
         <label for="EmployeeNumber">Табельный номер</label>
-        <input type="text" class="form-control" id="EmployeeNumber" name="EmployeeNumber" value="@Model.EmployeeNumber" />
+        <input type="text" class="form-control" id="EmployeeNumber" name="EmployeeNumber" oninput="filterEmployees()" />
     </div>
-    <button type="submit" class="btn btn-primary">Отправить</button>
+
+    <div class="form-group">
+        <label asp-for="SelectedEmployeeId" class="control-label">Сотрудники</label>
+        <select asp-for="SelectedEmployeeId" class="form-control" asp-items="Model.AllEmployeeList" size="5" id="empList">
+        </select>
+        <span asp-validation-for="SelectedEmployeeId" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary" value="Action1">Отправить</button>
 </form>
 
-@if (!ModelState.IsValid)
-{
-    <div class="alert alert-danger mt-3">
-        @foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
-        {
-            <p>@error.ErrorMessage</p>
-            break;
+<script>
+    function filterEmployees() {
+        var input, filter, ul, li, a, i, txtValue;
+        input = document.getElementById('EmployeeNumber');
+        filter = input.value.toUpperCase();
+        select = document.getElementById("empList");
+        options = select.getElementsByTagName('option');
+
+        for (i = 0; i < options.length; i++) {
+            txtValue = options[i].textContent || options[i].innerText;
+            if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                options[i].style.display = "";
+            } else {
+                options[i].style.display = "none";
+            }
         }
-    </div>
-}
+    }
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        
+        const empList = document.getElementById('empList');
+
+        const action1Button = document.querySelector('button[value="Action1"]');
+
+
+        function toggleButtons() {
+
+            const isEmpListFilled = empList.selectedOptions.length > 0;
+
+
+            action1Button.disabled = !(isEmpListFilled);
+
+        }
+
+
+        empList.addEventListener('change', toggleButtons);
+
+
+        toggleButtons(); // Initial check
+    });
+</script>

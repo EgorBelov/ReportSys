@@ -10,6 +10,7 @@ using System.Drawing;
 using ReportSys.DAL;
 using ReportSys.DAL.Entities;
 using System.Globalization;
+using static OfficeOpenXml.ExcelErrorValue;
 
 namespace ReportSys.Pages.Services
 {
@@ -19,6 +20,24 @@ namespace ReportSys.Pages.Services
         public SelectList EmployeesSL { get; set; }
         public SelectList DepartmentsSL { get; set; }
 
+        public SelectList AllEmployeesSL { get; set; }
+
+
+
+        public async Task GetAllEmployeesAsync(ReportSysContext context, object value = null)
+        {
+            var query = context.Employees
+                .OrderBy(x => x.FirstName)
+                .Select(x => new
+                {
+                    x.Id,
+                    DisplayText = x.Id + " " + x.FirstName + " " + x.SecondName + " " + x.LastName
+                });
+
+            var employees = await query.AsNoTracking().ToListAsync();
+
+            AllEmployeesSL = new SelectList(employees, "Id", "DisplayText", value);
+        }
 
 
         public async Task<List<int>> GetSubordinateDepartmentsAsync(ReportSysContext context, int departmentId)
@@ -44,14 +63,19 @@ namespace ReportSys.Pages.Services
 
             var query = context.Employees
                 .Where(x => departmentIds.Contains(x.DepartmentId))
-                .OrderBy(x => x.FirstName);
+                .OrderBy(x => x.FirstName)
+                 .Select(x => new
+                  {
+                      x.Id,
+                      DisplayText = x.FirstName + " " + x.SecondName + " " + x.LastName
+                  });
 
             var employees = await query.AsNoTracking().ToListAsync();
 
             // Отладочная информация
             Console.WriteLine($"Found {employees.Count} employees");
 
-            EmployeesSL = new SelectList(employees, "Id", "FirstName", value);
+            EmployeesSL = new SelectList(employees, "Id", "DisplayText", value);
         }
 
         public async Task DepartmentsFromDepartAsync(ReportSysContext context, int departmentId, object value = null)

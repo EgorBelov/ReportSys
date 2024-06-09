@@ -1,12 +1,14 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using ReportSys.DAL;
+using ReportSys.Pages.Services;
 using System.Threading.Tasks;
 
 namespace ReportSys.Pages.EntryAccess
 {
-    public class IndexModel : PageModel
+    public class IndexModel : ServicesPage
     {
         private readonly ReportSysContext _context;
 
@@ -16,23 +18,39 @@ namespace ReportSys.Pages.EntryAccess
         }
 
         [BindProperty]
+        public List<SelectListItem> AllEmployeeList { get; set; }
+
+
+        [BindProperty]
+        public int SelectedEmployeeId { get; set; }
+
+
+        [BindProperty]
         public string EmployeeNumber { get; set; }
 
-        public void OnGet()
+        public async Task<IActionResult> OnGetAsync()
         {
+
+
+            await GetAllEmployeesAsync(_context);
+
+            AllEmployeeList = AllEmployeesSL.ToList();
+
+            return Page();
+
         }
 
         public async Task<IActionResult> OnPostAsync()
         {
-            if (string.IsNullOrEmpty(EmployeeNumber))
-            {
-                ModelState.AddModelError(string.Empty, "Табельный номер обязателен.");
-                return Page();
-            }
+            //if (string.IsNullOrEmpty(EmployeeNumber))
+            //{
+            //    ModelState.AddModelError(string.Empty, "Табельный номер обязателен.");
+            //    return Page();
+            //}
 
             var employee = await _context.Employees
                 .Include(e => e.Position)
-                .FirstOrDefaultAsync(e => e.Id.ToString() == EmployeeNumber);
+                .FirstOrDefaultAsync(e => e.Id.ToString() == SelectedEmployeeId.ToString());
 
             if (employee == null)
             {
@@ -40,7 +58,8 @@ namespace ReportSys.Pages.EntryAccess
                 return Page();
             }
 
-            HttpContext.Session.SetString("EmployeeNumber", EmployeeNumber);
+            //HttpContext.Session.SetString("EmployeeNumber", EmployeeNumber);
+            HttpContext.Session.SetString("EmployeeNumber", SelectedEmployeeId.ToString());
 
             switch (employee.Position.AccessLevel)
             {

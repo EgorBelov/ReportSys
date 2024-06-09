@@ -9,7 +9,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{@Model._id}</title>
+    <title>@Model._id</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -17,6 +17,8 @@
             const endDateInput = document.getElementById('endDate');
             const empList = document.getElementById('empList');
             const deptList = document.getElementById('deptList');
+            const empSearch = document.getElementById('empSearch');
+            const deptSearch = document.getElementById('deptSearch');
             const action1Button = document.querySelector('button[value="Action1"]');
             const action2Button = document.querySelector('button[value="Action2"]');
 
@@ -29,6 +31,18 @@
                 action2Button.disabled = !(areDatesFilled && isDeptListFilled);
             }
 
+            function filterList(searchInput, list) {
+                const filter = searchInput.value.toLowerCase();
+                const options = list.options;
+                for (let i = 0; i < options.length; i++) {
+                    const option = options[i];
+                    const text = option.text.toLowerCase();
+                    option.style.display = text.includes(filter) ? '' : 'none';
+                }
+            }
+
+            empSearch.addEventListener('input', () => filterList(empSearch, empList));
+            deptSearch.addEventListener('input', () => filterList(deptSearch, deptList));
             startDateInput.addEventListener('input', toggleButtons);
             endDateInput.addEventListener('input', toggleButtons);
             empList.addEventListener('change', toggleButtons);
@@ -44,6 +58,7 @@
     <form method="post">
         <div class="form-group">
             <label asp-for="SelectedEmployeeIds" class="control-label">Сотрудники</label>
+            <input type="text" id="empSearch" class="form-control mb-2" placeholder="Поиск сотрудника...">
             <select asp-for="SelectedEmployeeIds" class="form-control" asp-items="Model.EmployeeList" multiple size="5" id="empList">
             </select>
             <span asp-validation-for="SelectedEmployeeIds" class="text-danger"></span>
@@ -51,6 +66,7 @@
 
         <div class="form-group">
             <label asp-for="SelectedDepartIds" class="control-label">Отделы</label>
+            <input type="text" id="deptSearch" class="form-control mb-2" placeholder="Поиск отдела...">
             <select asp-for="SelectedDepartIds" class="form-control" asp-items="Model.DepartList" multiple size="5" id="deptList">
             </select>
             <span asp-validation-for="SelectedDepartIds" class="text-danger"></span>

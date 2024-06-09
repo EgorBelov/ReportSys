@@ -7,6 +7,7 @@ using ReportSys.DAL;
 using ReportSys.DAL.Entities;
 using System.Data;
 using System.Globalization;
+using System.Linq;
 
 namespace ReportSys.Pages
 {
@@ -21,7 +22,6 @@ namespace ReportSys.Pages
 
         [BindProperty]
         public IFormFile Upload { get; set; }
-
 
         public string RemoveExtraSpaces(string input)
         {
@@ -84,12 +84,17 @@ namespace ReportSys.Pages
 
             var uniqueEmployeeNames = GetUniqueColumnValues(dataTable, "Сотрудник (Посетитель)");
 
+            var positions = await _context.Positions.ToListAsync();
+            var departments = await _context.Departments.ToListAsync();
+            var eventTypes = await _context.EventTypes.ToListAsync();
+            var workSchedules = await _context.WorkSchedules.ToListAsync();
+
             using (var transaction = await _context.Database.BeginTransactionAsync())
             {
                 var employeesToAdd = new List<Employee>();
                 var eventsToAdd = new List<Event>();
 
-                foreach (var employeeName in uniqueEmployeeNames)
+                Parallel.ForEach(uniqueEmployeeNames, employeeName =>
                 {
                     string[] words = employeeName.Split(' ');
 
@@ -107,10 +112,16 @@ namespace ReportSys.Pages
                     string positionName = RemoveExtraSpaces(GetOtherColumnValue(dataTable, "Сотрудник (Посетитель)", employeeName, "Должность")).Trim();
                     string divisionOrDepartmentName = RemoveExtraSpaces(GetOtherColumnValue(dataTable, "Сотрудник (Посетитель)", employeeName, "Подразделение")).Trim();
 
-                    var position = await _context.Positions.FirstOrDefaultAsync(x => x.Name == positionName);
+                    var position = positions.FirstOrDefault(x => x.Name == positionName);
                     if (position == null)
                     {
                         throw new Exception($"Position not found: {positionName}");
+                    }
+
+                    var department = departments.FirstOrDefault(x => x.Name == divisionOrDepartmentName);
+                    if (department == null)
+                    {
+                        throw new Exception($"Department not found: {divisionOrDepartmentName}");
                     }
 
                     var employee = new Employee
@@ -121,26 +132,29 @@ namespace ReportSys.Pages
                         LastName = words[2]
                     };
 
-                    var department = await _context.Departments.FirstOrDefaultAsync(x => x.Name == divisionOrDepartmentName);
-                    if (department == null)
+                    lock (department.Employees)
                     {
-                        throw new Exception($"Department not found: {divisionOrDepartmentName}");
+                        department.Employees.Add(employee);
                     }
 
-                    department.Employees.Add(employee);
-                    position.Employees.Add(employee);
-
-                    var workSchedules = await _context.WorkSchedules.ToListAsync();
-                    if (workSchedules.Any())
+                    lock (position.Employees)
                     {
-                        workSchedules[0].Employees.Add(employee);
+                        position.Employees.Add(employee);
+                    }
+
+                    lock (workSchedules)
+                    {
+                        if (workSchedules.Any())
+                        {
+                            workSchedules[0].Employees.Add(employee);
+                        }
                     }
 
                     var needrows = GetRowsByColumnValue(dataTable, "Сотрудник (Посетитель)", employeeName);
 
                     foreach (var row in needrows)
                     {
-                        var eventtype = await _context.EventTypes.FirstOrDefaultAsync(x => x.Name == row[10].ToString());
+                        var eventtype = eventTypes.FirstOrDefault(x => x.Name == row[10].ToString());
                         if (eventtype == null)
                         {
                             throw new Exception($"Event type not found: {row[10].ToString()}");
@@ -156,18 +170,24 @@ namespace ReportSys.Pages
                             throw new Exception($"Invalid time format for row: {row[4].ToString()}");
                         }
 
-                        eventsToAdd.Add(new Event
+                        lock (eventsToAdd)
                         {
-                            Date = dateResult,
-                            Time = timeResult,
-                            Territory = row[8].ToString(),
-                            EventType = eventtype,
-                            Employee = employee
-                        });
+                            eventsToAdd.Add(new Event
+                            {
+                                Date = dateResult,
+                                Time = timeResult,
+                                Territory = row[8].ToString(),
+                                EventType = eventtype,
+                                Employee = employee
+                            });
+                        }
                     }
 
-                    employeesToAdd.Add(employee);
-                }
+                    lock (employeesToAdd)
+                    {
+                        employeesToAdd.Add(employee);
+                    }
+                });
 
                 const int batchSize = 100;
                 for (int i = 0; i < employeesToAdd.Count; i += batchSize)
