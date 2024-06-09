@@ -12,12 +12,44 @@
     </div>
 }
 
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["ErrorMessage"]
+    </div>
+}
 
-<form method="post" enctype="multipart/form-data">
+<form method="post" enctype="multipart/form-data" id="uploadForm">
     <div class="form-group">
         <label asp-for="Upload" class="control-label"></label>
-        <input asp-for="Upload" type="file" class="form-control" />
+        <input asp-for="Upload" type="file" class="form-control" id="fileInput" />
         <span asp-validation-for="Upload" class="text-danger"></span>
     </div>
-    <button type="submit" class="btn btn-primary">Загрузить</button>
+    <button type="submit" class="btn btn-primary" id="uploadButton" disabled>Загрузить</button>
 </form>
+
+@section Scripts {
+    <script>
+        document.getElementById('fileInput').addEventListener('change', function () {
+            var uploadButton = document.getElementById('uploadButton');
+            if (this.files.length > 0) {
+                uploadButton.disabled = false;
+            } else {
+                uploadButton.disabled = true;
+            }
+        });
+
+        document.getElementById('uploadForm').addEventListener('submit', function () {
+            var uploadButton = document.getElementById('uploadButton');
+            uploadButton.disabled = true;
+            uploadButton.innerText = 'Загрузка...';
+
+            // Disable header buttons
+            var headerButtons = document.querySelectorAll('.header-button');
+            headerButtons.forEach(function (button) {
+                button.classList.add('disabled');
+                button.onclick = function () { return false; }; // Prevent clicking
+            });
+        });
+    </script>
+}

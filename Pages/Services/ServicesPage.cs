@@ -156,7 +156,8 @@ namespace ReportSys.Pages.Services
 
                         if (eventsForDate.Count == 0 && unavailabilityForDate == null)
                         {
-                            continue; // Пропускаем дни, которых нет
+                            //continue; // пропускаем дни, которых нет
+                            colorCell(worksheet, rowIndex, Color.SandyBrown);
                         }
 
                         var startRow = rowIndex;
@@ -428,20 +429,29 @@ namespace ReportSys.Pages.Services
                     var str = employee.WorkSchedule.GetScheduleString();
                     worksheet.Cells[5, 9].Value = str;
 
-                    if (rowIndex != 3)
+                    if (rowIndex != 5)
                     {
                         worksheet.Cells[$"I5:I{rowIndex - 1}"].Merge = true;
+                        // Форматирование столбца с личным графиком
+                        worksheet.Cells[$"I5:I{rowIndex - 1}"].Style.VerticalAlignment = ExcelVerticalAlignment.Top;
+                        worksheet.Cells[$"I5:I{rowIndex - 1}"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                        worksheet.Cells[$"I5:I{rowIndex - 1}"].Style.WrapText = true;
+                        // Форматирование столбца с личным графиком
+                        worksheet.Cells[$"I5:I{rowIndex - 1}"].Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                        worksheet.Cells[$"I5:I{rowIndex - 1}"].Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                        worksheet.Cells[$"I5:I{rowIndex - 1}"].Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                        worksheet.Cells[$"I5:I{rowIndex - 1}"].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                     }
 
                     // Форматирование столбца с личным графиком
-                    worksheet.Cells[$"I5:I{rowIndex - 1}"].Style.VerticalAlignment = ExcelVerticalAlignment.Top;
-                    worksheet.Cells[$"I5:I{rowIndex - 1}"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-                    worksheet.Cells[$"I5:I{rowIndex - 1}"].Style.WrapText = true;
+                    worksheet.Cells[$"I5:I{rowIndex}"].Style.VerticalAlignment = ExcelVerticalAlignment.Top;
+                    worksheet.Cells[$"I5:I{rowIndex}"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    worksheet.Cells[$"I5:I{rowIndex}"].Style.WrapText = true;
                     // Форматирование столбца с личным графиком
-                    worksheet.Cells[$"I5:I{rowIndex - 1}"].Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                    worksheet.Cells[$"I5:I{rowIndex - 1}"].Style.Border.Left.Style = ExcelBorderStyle.Thin;
-                    worksheet.Cells[$"I5:I{rowIndex - 1}"].Style.Border.Right.Style = ExcelBorderStyle.Thin;
-                    worksheet.Cells[$"I5:I{rowIndex - 1}"].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                    worksheet.Cells[$"I5:I{rowIndex}"].Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    worksheet.Cells[$"I5:I{rowIndex}"].Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    worksheet.Cells[$"I5:I{rowIndex}"].Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                    worksheet.Cells[$"I5:I{rowIndex}"].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                 }   
 
                 package.Save();

@@ -2,6 +2,7 @@
 @model ReportSys.Pages.EntryAccess.IndexModel
 @{
 }
+
 <h2>Введите табельный номер</h2>
 
 <form method="post">
@@ -11,3 +12,14 @@
     </div>
     <button type="submit" class="btn btn-primary">Отправить</button>
 </form>
+
+@if (!ModelState.IsValid)
+{
+    <div class="alert alert-danger mt-3">
+        @foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
+        {
+            <p>@error.ErrorMessage</p>
+            break;
+        }
+    </div>
+}

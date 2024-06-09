@@ -207,29 +207,40 @@ namespace ReportSys.Pages.PageUnavailability
 
         public async Task<IActionResult> OnPostAsync()
         {
+            try
+            {
+                await LoadExcelFile();
+                TempData["SuccessMessage"] = "File uploaded successfully.";
+                return RedirectToPage("/EntryAccess/Index");
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Error processing file: {ex.Message}";
+                return Page();
+            }
 
-            await LoadExcelFile();
+            //await LoadExcelFile();
 
-            //foreach (DataRow row in data)
-            //{
-            //    var employee = new Employee
-            //    {
-            //        // ��������� �������� ������ ������� �� ������
-            //        Name = row["NameColumnName"].ToString(), // �������� �� �������� ��� �������
-            //        Position = row["PositionColumnName"].ToString() // �������� �� �������� ��� �������
-            //                                                        // �������� ������ �������� �� �������������
-            //    };
+            ////foreach (DataRow row in data)
+            ////{
+            ////    var employee = new Employee
+            ////    {
+            ////        // ��������� �������� ������ ������� �� ������
+            ////        Name = row["NameColumnName"].ToString(), // �������� �� �������� ��� �������
+            ////        Position = row["PositionColumnName"].ToString() // �������� �� �������� ��� �������
+            ////                                                        // �������� ������ �������� �� �������������
+            ////    };
 
-            //    _context.Employees.Add(employee);
-            //}
+            ////    _context.Employees.Add(employee);
+            ////}
 
-            await _context.SaveChangesAsync();
+            //await _context.SaveChangesAsync();
 
-            // Setting success message
-            TempData["SuccessMessage"] = "File uploaded successfully.";
+            //// Setting success message
+            //TempData["SuccessMessage"] = "File uploaded successfully.";
 
 
-            return RedirectToPage("/EntryAccess/Index");
+            //return RedirectToPage("/EntryAccess/Index");
         }
     }
 }
