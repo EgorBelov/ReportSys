@@ -3,8 +3,6 @@
 @{
 }
 
-
-
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -12,13 +10,16 @@
     <title>@Model._name</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const startDateInput = document.getElementById('startDate');
             const endDateInput = document.getElementById('endDate');
             const submitButton = document.querySelector('button[type="submit"]');
 
             function toggleSubmitButton() {
-                if (startDateInput.value && endDateInput.value) {
+                const startDateValue = new Date(startDateInput.value);
+                const endDateValue = new Date(endDateInput.value);
+
+                if (startDateInput.value && endDateInput.value && startDateValue <= endDateValue) {
                     submitButton.disabled = false;
                 } else {
                     submitButton.disabled = true;

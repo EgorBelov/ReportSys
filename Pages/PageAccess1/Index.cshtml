@@ -23,7 +23,9 @@
             const action2Button = document.querySelector('button[value="Action2"]');
 
             function toggleButtons() {
-                const areDatesFilled = startDateInput.value && endDateInput.value;
+                const startDateValue = new Date(startDateInput.value);
+                const endDateValue = new Date(endDateInput.value);
+                const areDatesFilled = startDateInput.value && endDateInput.value && startDateValue <= endDateValue;
                 const isEmpListFilled = empList.selectedOptions.length > 0;
                 const isDeptListFilled = deptList.selectedOptions.length > 0;
 

@@ -35,20 +35,20 @@ namespace ReportSys.Pages
             return string.Join(" ", words);
         }
 
-        public async Task<IActionResult> OnPostAsync()
-        {
-            try
-            {
-                await LoadExcelFile();
-                TempData["SuccessMessage"] = "File uploaded successfully.";
-                return RedirectToPage("/PageUnavailability/Index");
-            }
-            catch (Exception ex)
-            {
-                TempData["ErrorMessage"] = $"Error processing file: {ex.Message}";
-                return Page();
-            }
-        }
+        //public async Task<IActionResult> OnPostAsync()
+        //{
+        //    try
+        //    {
+        //        await LoadExcelFile();
+        //        TempData["SuccessMessage"] = "File uploaded successfully.";
+        //        return RedirectToPage("/PageUnavailability/Index");
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        TempData["ErrorMessage"] = $"Error processing file: {ex.Message}";
+        //        return Page();
+        //    }
+        //}
 
         public async Task LoadExcelFile()
         {
@@ -229,5 +229,92 @@ namespace ReportSys.Pages
             return dataTable.AsEnumerable()
                             .Where(row => row.Field<string>(searchColumn) == searchValue);
         }
+
+        public async Task<IActionResult> OnPostAsync()
+        {
+            try
+            {
+                // Validate the uploaded Excel file data
+                var validationErrors = await ValidateExcelFile();
+                if (validationErrors.Any())
+                {
+                    TempData["ErrorMessage"] = string.Join(", ", validationErrors);
+                    return Page();
+                }
+
+                // If validation passes, clear the old data and load new data
+                await ClearOldData();
+                await LoadExcelFile();
+
+                TempData["SuccessMessage"] = "File uploaded and processed successfully.";
+                return RedirectToPage("/PageUnavailability/Index");
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Error processing file: {ex.Message}";
+                return Page();
+            }
+        }
+
+        private async Task<List<string>> ValidateExcelFile()
+        {
+            var errors = new List<string>();
+            DataTable dataTable = new DataTable();
+
+            using (var stream = new MemoryStream())
+            {
+                await Upload.CopyToAsync(stream);
+                using (ExcelPackage package = new ExcelPackage(stream))
+                {
+                    ExcelWorksheet worksheet = package.Workbook.Worksheets[0]; // Use the first sheet
+
+                    foreach (var firstRowCell in worksheet.Cells[4, 1, 4, worksheet.Dimension.End.Column])
+                    {
+                        dataTable.Columns.Add(firstRowCell.Text);
+                    }
+
+                    for (int rowNum = 5; rowNum <= worksheet.Dimension.End.Row; rowNum++)
+                    {
+                        var wsRow = worksheet.Cells[rowNum, 1, rowNum, worksheet.Dimension.End.Column];
+                        DataRow row = dataTable.NewRow();
+                        foreach (var cell in wsRow)
+                        {
+                            row[cell.Start.Column - 1] = cell.Text;
+                        }
+                        dataTable.Rows.Add(row);
+                    }
+                }
+            }
+
+            var uniqueEmployeeNames = GetUniqueColumnValues(dataTable, "Сотрудник (Посетитель)");
+
+            foreach (var employeeName in uniqueEmployeeNames)
+            {
+                string[] words = employeeName.Split(' ');
+                if (words.Length < 3)
+                {
+                    errors.Add($"Invalid employee name format: {employeeName}");
+                }
+
+                if (!int.TryParse(RemoveExtraSpaces(GetOtherColumnValue(dataTable, "Сотрудник (Посетитель)", employeeName, "Карта №")).Trim(), out int id))
+                {
+                    errors.Add($"Invalid ID for employee: {employeeName}");
+                }
+            }
+
+            return errors;
+        }
+
+        private async Task ClearOldData()
+        {
+            var employees = await _context.Employees.ToListAsync();
+            var events = await _context.Events.ToListAsync();
+
+            _context.Employees.RemoveRange(employees);
+            _context.Events.RemoveRange(events);
+
+            await _context.SaveChangesAsync();
+        }
+
     }
 }
