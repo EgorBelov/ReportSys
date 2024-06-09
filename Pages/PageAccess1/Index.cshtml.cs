@@ -243,8 +243,10 @@ namespace ReportSys.Pages.PageAccess1
 
                 //var UpDepIds = FindTopLevelDepartments(SelectedDepartIds, _context);
                 var UpDepIds = await _context.Hierarchies
-                        .Where(e => SelectedDepartIds.Contains(e.UpperDepartmentId))
-                        .ToListAsync();
+                         .Where(e => SelectedDepartIds.Contains(e.UpperDepartmentId))
+                         .Select(e => e.LowerDepartmentId)
+                         .ToListAsync();
+
 
                 int row = 5;
                 var MinSumS = 0;
@@ -259,309 +261,46 @@ namespace ReportSys.Pages.PageAccess1
                 {
                     foreach(var depId in SelectedDepartIds)
                     {
-                        var datesSet = new HashSet<DateOnly>(Dates); // Преобразуем список дат в HashSet для быстрой проверки
-
-                        var dep = await _context.Departments
-                            .Include(d => d.Employees).ThenInclude(e => e.Unavailabilitys)
-                            .Include(d => d.Employees).ThenInclude(e => e.Position)
-                            .Include(d => d.Employees).ThenInclude(e => e.WorkSchedule)
-                            .Include(d => d.Employees).ThenInclude(e => e.Events.Where(e => datesSet.Contains(e.Date)))
-                            .FirstOrDefaultAsync(d => d.Id == depId);
-
-
-                        worksheet.Cells[row, 1].Value = dep.Name;
-                        worksheet.Cells[row, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Left;
-                        worksheet.Row(row).Style.HorizontalAlignment = ExcelHorizontalAlignment.Left;
-                        row++;
-                        worksheet.Cells[$"A{row-1}:{GetExcelColumnName(12 + Dates.Count())}{row-1}"].Merge = true;
-                        worksheet.Cells[$"A{row - 1}:{GetExcelColumnName(12 + Dates.Count())}{row - 1}"].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
-                        worksheet.Cells[$"A{row - 1}:{GetExcelColumnName(12 + Dates.Count())}{row - 1}"].Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                        worksheet.Cells[$"A{row - 1}:{GetExcelColumnName(12 + Dates.Count())}{row - 1}"].Style.Border.Left.Style = ExcelBorderStyle.Thin;
-                        worksheet.Cells[$"A{row - 1}:{GetExcelColumnName(12 + Dates.Count())}{row - 1}"].Style.Border.Right.Style = ExcelBorderStyle.Thin;
-                        var numPP = 0;
-                        var numWorkDays = 0;
-                        var numNegDevsS = 0;
-                        var numPosDevsS = 0;
-                        var numNegDevsE = 0;
-                        var numPosDevsE = 0;
-                        var timNegDevsS = new TimeSpan();
-                        var timPosDevsS = new TimeSpan();
-                        var timNegDevsE = new TimeSpan();
-                        var timPosDevsE = new TimeSpan();
-                        // Создание временного интервала в 8 часов
-                        TimeSpan eightHours = TimeSpan.FromHours(8);
-
-                        foreach (var emp in dep.Employees)
+                        var reportData = new ReportData
                         {
+                            Worksheet = worksheet,
+                            Row = row,
+                            MinSumE = MinSumE,
+                            MinSumS = MinSumS,
+                            PlusSumE = PlusSumE,
+                            PlusSumS = PlusSumS,
+                            MinTimeS = MinTimeS,
+                            MinTimeE = MinTimeE,
+                            PlusTimeS = PlusTimeS,
+                            PlusTimeE = PlusTimeE
+                        };
 
-                            var startTime = emp.WorkSchedule.Arrival;
-                            var endTime = emp.WorkSchedule.Exit;
+                        reportData = await Smth(_context, Dates, depId, reportData);
 
-                            
-                            worksheet.Cells[row, 1].Value = numPP;
-                            row++;
-                            worksheet.Cells[$"A{row-1}:A{row}"].Merge= true;
+                        // Обновите значения после вызова метода
+                        worksheet = reportData.Worksheet;
+                        row = reportData.Row;
+                        MinSumE = reportData.MinSumE;
+                        MinSumS = reportData.MinSumS;
+                        PlusSumE = reportData.PlusSumE;
+                        PlusSumS = reportData.PlusSumS;
+                        MinTimeS = reportData.MinTimeS;
+                        MinTimeE = reportData.MinTimeE;
+                        PlusTimeS = reportData.PlusTimeS;
+                        PlusTimeE = reportData.PlusTimeE;
 
-                            numPP++;
-
-                            
-                            worksheet.Cells[row-1, 2].Value = emp.Position.Name;
-
-                            worksheet.Cells[$"B{row - 1}:B{row}"].Merge = true;
-
-                          
-                            worksheet.Cells[row-1, 3].Value = emp.FirstName + " " + emp.SecondName + " " + emp.LastName;
-
-                            worksheet.Cells[$"C{row - 1}:C{row}"].Merge = true;
-
-                            worksheet.Cells[row - 1, 4].Value = "приход";
-                            worksheet.Cells[row, 4].Value = "уход";
-                            var i = 5;
-                            numWorkDays = 0;
-                            numNegDevsS = 0;
-                            numPosDevsS = 0;
-                            numNegDevsE = 0;
-                            numPosDevsE = 0;
-                            timNegDevsS = new TimeSpan();
-                            timPosDevsS = new TimeSpan();
-                            timNegDevsE = new TimeSpan();
-                            timPosDevsE = new TimeSpan();
-                            foreach (var date in Dates)
-                            {
-                                var events = await _context.Events
-                                            .Include(e => e.EventType)
-                                            .Where(e => e.EmployeeId == emp.Id && e.Date == date)
-                                            .ToListAsync();
-
-
-                                var unf = await _context.Unavailabilitys
-                                            .Include(e => e.UnavailabilityType)
-                                            .Include(e => e.Employee)
-                                            .Where(e => e.Date == date && e.Employee == emp)
-                                            .FirstOrDefaultAsync();
-
-
-
-                                if (events != null && events.Count != 0)
-                                {
-                                    // Найти первый евент с EventTypeId == 0
-                                    var firstEventType0 = events.FirstOrDefault(e => e.EventType.Id == 1);
-
-                                    // Найти последний евент с EventTypeId == 1
-                                    var lastEventType1 = events.LastOrDefault(e => e.EventType.Id == 2);
-
-
-
-                                    if (firstEventType0 != null)
-                                    {
-                                        worksheet.Cells[row - 1, i].Value = firstEventType0.Time.ToString("HH:mm:ss");
-
-
-                                        if (firstEventType0.Time - startTime > TimeSpan.FromMinutes(3) && firstEventType0.Time > startTime)
-                                        {
-
-                                            if (unf != null)
-                                            {
-                                                if (unf.UnavailabilityTypeId != 4)
-                                                {
-                                                    colorCell(worksheet, row - 1, i, Color.SkyBlue);
-
-                                                }
-                                                else if (firstEventType0.Time < unf.UnavailabilityFrom || firstEventType0.Time > unf.UnavailabilityBefore)
-                                                {
-                                                    colorCell(worksheet, row - 1, i, Color.SandyBrown);
-                                                    numNegDevsS++;
-                                                    timNegDevsS = timNegDevsS.Add(firstEventType0.Time - startTime);
-                                                }
-                                                else
-                                                {
-                                                    colorCell(worksheet, row - 1, i, Color.Khaki);
-                                                }
-                                            }
-                                            else
-                                            {
-                                                colorCell(worksheet, row - 1, i, Color.SandyBrown);
-                                                numNegDevsS++;
-                                                timNegDevsS = timNegDevsS.Add(firstEventType0.Time - startTime);
-                                            }
-
-                                        }
-                                        if (startTime - firstEventType0.Time > TimeSpan.FromMinutes(3) && startTime > firstEventType0.Time)
-                                        {
-                                            if (unf != null)
-                                            {
-                                                if (unf.UnavailabilityTypeId != 4)
-                                                {
-                                                    colorCell(worksheet, row - 1, i, Color.SkyBlue);
-
-                                                }
-
-                                            }
-                                            else
-                                            {
-                                                colorCell(worksheet, row - 1, i, Color.LightGreen);
-                                                numPosDevsS++;
-                                                timPosDevsS = timPosDevsS.Add(startTime - firstEventType0.Time);
-                                            }
-                                        }
-                                    }
-                                    else
-                                    {
-                                        colorCell(worksheet, row - 1, i, Color.Pink);
-                                    }
-                                    if (lastEventType1 != null)
-                                    {
-                                        worksheet.Cells[row, i].Value = lastEventType1.Time.ToString("HH:mm:ss");
-
-                                        if (endTime - lastEventType1.Time > TimeSpan.FromMinutes(3) && endTime > lastEventType1.Time)
-                                        {
-
-                                            if (unf != null)
-                                            {
-                                                if (unf.UnavailabilityTypeId != 4)
-                                                {
-                                                    colorCell(worksheet, row, i, Color.SkyBlue);
-
-                                                }
-                                                else if (lastEventType1.Time < unf.UnavailabilityFrom || lastEventType1.Time > unf.UnavailabilityBefore)
-                                                {
-                                                    colorCell(worksheet, row, i, Color.SandyBrown);
-                                                    numNegDevsE++;
-                                                    timNegDevsE = timNegDevsE.Add(endTime - lastEventType1.Time);
-                                                }
-                                                else
-                                                {
-                                                    colorCell(worksheet, row, i, Color.Khaki);
-
-                                                }
-                                            }
-                                            else
-                                            {
-                                                colorCell(worksheet, row, i, Color.SandyBrown);
-                                                numNegDevsE++;
-                                                timNegDevsE = timNegDevsE.Add(endTime - lastEventType1.Time);
-                                            }
-
-                                        }
-                                        if (lastEventType1.Time - endTime > TimeSpan.FromMinutes(3) && lastEventType1.Time > endTime)
-                                        {
-                                            if (unf != null)
-                                            {
-                                                if (unf.UnavailabilityTypeId != 4)
-                                                {
-                                                    colorCell(worksheet, row, i, Color.SkyBlue);
-
-                                                }
-
-                                            }
-                                            else
-                                            {
-                                                colorCell(worksheet, row, i, Color.LightGreen);
-                                                numPosDevsE++;
-                                                timPosDevsE = timPosDevsE.Add(lastEventType1.Time - endTime);
-                                            }
-
-                                        }
-
-                                    }
-                                    else
-                                    {
-                                        colorCell(worksheet, row, i, Color.Pink);
-                                    }
-                                    if (lastEventType1 != null || firstEventType0 != null)
-                                    {
-                                        numWorkDays++;
-                                    }
-                                                                       
-                                    i++;
-                                }
-                                else
-                                {
-                                    
-                                    if (unf != null)
-                                    {
-                                        if (unf.UnavailabilityTypeId != 4)
-                                        {
-                                            colorCell(worksheet, row - 1, i, Color.Khaki);
-                                            colorCell(worksheet, row, i, Color.Khaki);
-
-                                        }
-
-                                    }
-                                    else
-                                    {
-                                        colorCell(worksheet, row - 1, i, Color.SandyBrown);
-                                        colorCell(worksheet, row, i, Color.SandyBrown);
-                                    }
-                                    i++;
-                                }
-
-                            }
-
-                            if (numWorkDays != 0)
-                            {
-                                worksheet.Cells[row - 1, 5 + Dates.Count()].Value = numNegDevsS;
-                                worksheet.Cells[row - 1, 6 + Dates.Count()].Value = Math.Round((double)numNegDevsS / numWorkDays * 100, 2);
-
-                                worksheet.Cells[row - 1, 7 + Dates.Count()].Value = FormatTimeSpan(timNegDevsS);
-                                worksheet.Cells[row - 1, 8 + Dates.Count()].Value = Math.Round(timNegDevsS.TotalHours / (numWorkDays * eightHours.TotalHours) * 100, 2);
-
-                                worksheet.Cells[row - 1, 9 + Dates.Count()].Value = numPosDevsS;
-                                worksheet.Cells[row - 1, 10 + Dates.Count()].Value = Math.Round((double)numPosDevsS / numWorkDays * 100, 2);
-
-                                worksheet.Cells[row - 1, 11 + Dates.Count()].Value = FormatTimeSpan(timPosDevsS);
-                                worksheet.Cells[row - 1, 12 + Dates.Count()].Value = Math.Round(timPosDevsS.TotalHours / (numWorkDays * eightHours.TotalHours) * 100, 2);
-
-
-
-                                worksheet.Cells[row, 5 + Dates.Count()].Value = numNegDevsE;
-                                worksheet.Cells[row, 6 + Dates.Count()].Value = Math.Round((double)numNegDevsE / numWorkDays * 100, 2);
-
-                                worksheet.Cells[row, 7 + Dates.Count()].Value = FormatTimeSpan(timNegDevsE);
-                                worksheet.Cells[row, 8 + Dates.Count()].Value = Math.Round(timNegDevsE.TotalHours / (numWorkDays * eightHours.TotalHours) * 100, 2);
-
-                                worksheet.Cells[row, 9 + Dates.Count()].Value = numPosDevsE;
-                                worksheet.Cells[row, 10 + Dates.Count()].Value = Math.Round((double)numPosDevsE / numWorkDays * 100, 2);
-
-                                worksheet.Cells[row, 11 + Dates.Count()].Value = FormatTimeSpan(timPosDevsE);
-                                worksheet.Cells[row, 12 + Dates.Count()].Value = Math.Round(timPosDevsE.TotalHours / (numWorkDays * eightHours.TotalHours) * 100, 2);
-
-                                MinSumS += numNegDevsS;
-                                MinSumE += numNegDevsE;
-                                PlusSumS += numPosDevsS;
-                                PlusSumE += numPosDevsE;
-                                MinTimeS = MinTimeS.Add(timNegDevsS);
-                                MinTimeE = MinTimeE.Add(timNegDevsE);
-                                PlusTimeS = PlusTimeS.Add(timPosDevsS);
-                                PlusTimeE = PlusTimeE.Add(timPosDevsE);
-                            }
-                            // Добавление бордера к каждой заполненной ячейке
-                            for (int col = 1; col <= 12 + Dates.Count(); col++)
-                            {
-                                worksheet.Cells[row-1, col].Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                                worksheet.Cells[row-1, col].Style.Border.Left.Style = ExcelBorderStyle.Thin;
-                                worksheet.Cells[row-1, col].Style.Border.Right.Style = ExcelBorderStyle.Thin;
-                                worksheet.Cells[row-1, col].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
-                                worksheet.Cells[row, col].Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                                worksheet.Cells[row, col].Style.Border.Left.Style = ExcelBorderStyle.Thin;
-                                worksheet.Cells[row, col].Style.Border.Right.Style = ExcelBorderStyle.Thin;
-                                worksheet.Cells[row, col].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
-                            }
-                            row++;
-                        }
-                        
                     }
                 }
                 else
                 {
                     var datesSet = new HashSet<DateOnly>(Dates); // Преобразуем список дат в HashSet для быстрой проверки
-                    var depId = UpDepIds[0].UpperDepartmentId;
+                    
                     var dep = await _context.Departments
                         .Include(d => d.Employees).ThenInclude(e => e.Unavailabilitys)
                         .Include(d => d.Employees).ThenInclude(e => e.Position)
                         .Include(d => d.Employees).ThenInclude(e => e.WorkSchedule)
                         .Include(d => d.Employees).ThenInclude(e => e.Events.Where(e => datesSet.Contains(e.Date)))
-                        .FirstOrDefaultAsync(d => d.Id == depId);
+                        .FirstOrDefaultAsync(d => d.Id == employee.DepartmentId);
                    
 
                     worksheet.Cells[row, 1].Value = dep.Name;
@@ -807,30 +546,31 @@ namespace ReportSys.Pages.PageAccess1
                         if (numWorkDays != 0)
                         {
                             worksheet.Cells[row - 1, 5 + Dates.Count()].Value = numNegDevsS;
-                            worksheet.Cells[row - 1, 6 + Dates.Count()].Value = Math.Round((double)numNegDevsS / numWorkDays * 100, 2);
+                            worksheet.Cells[row - 1, 6 + Dates.Count()].Value = CalculatePercentageDevs(numNegDevsS, numWorkDays);
+                           
 
                             worksheet.Cells[row - 1, 7 + Dates.Count()].Value = FormatTimeSpan(timNegDevsS);
-                            worksheet.Cells[row - 1, 8 + Dates.Count()].Value = Math.Round(timNegDevsS.TotalHours / (numWorkDays * eightHours.TotalHours) * 100, 2);
+                            worksheet.Cells[row - 1, 8 + Dates.Count()].Value = CalculatePercentageTimeDevs(timNegDevsS, numWorkDays);
 
                             worksheet.Cells[row - 1, 9 + Dates.Count()].Value = numPosDevsS;
-                            worksheet.Cells[row - 1, 10 + Dates.Count()].Value = Math.Round((double)numPosDevsS / numWorkDays * 100, 2);
+                            worksheet.Cells[row - 1, 10 + Dates.Count()].Value = CalculatePercentageDevs(numPosDevsS, numWorkDays);
 
                             worksheet.Cells[row - 1, 11 + Dates.Count()].Value = FormatTimeSpan(timPosDevsS);
-                            worksheet.Cells[row - 1, 12 + Dates.Count()].Value = Math.Round(timPosDevsS.TotalHours / (numWorkDays * eightHours.TotalHours) * 100, 2);
+                            worksheet.Cells[row - 1, 12 + Dates.Count()].Value = CalculatePercentageTimeDevs(timPosDevsS, numWorkDays);
 
 
 
                             worksheet.Cells[row, 5 + Dates.Count()].Value = numNegDevsE;
-                            worksheet.Cells[row, 6 + Dates.Count()].Value = Math.Round((double)numNegDevsE / numWorkDays * 100, 2);
+                            worksheet.Cells[row, 6 + Dates.Count()].Value = CalculatePercentageDevs(numNegDevsE, numWorkDays);
 
                             worksheet.Cells[row, 7 + Dates.Count()].Value = FormatTimeSpan(timNegDevsE);
-                            worksheet.Cells[row, 8 + Dates.Count()].Value = Math.Round(timNegDevsE.TotalHours / (numWorkDays * eightHours.TotalHours) * 100, 2);
+                            worksheet.Cells[row, 8 + Dates.Count()].Value = CalculatePercentageTimeDevs(timNegDevsE, numWorkDays);
 
                             worksheet.Cells[row, 9 + Dates.Count()].Value = numPosDevsE;
-                            worksheet.Cells[row, 10 + Dates.Count()].Value = Math.Round((double)numPosDevsE / numWorkDays * 100, 2);
+                            worksheet.Cells[row, 10 + Dates.Count()].Value = CalculatePercentageDevs(numPosDevsE, numWorkDays);
 
                             worksheet.Cells[row, 11 + Dates.Count()].Value = FormatTimeSpan(timPosDevsE);
-                            worksheet.Cells[row, 12 + Dates.Count()].Value = Math.Round(timPosDevsE.TotalHours / (numWorkDays * eightHours.TotalHours) * 100, 2);
+                            worksheet.Cells[row, 12 + Dates.Count()].Value = CalculatePercentageTimeDevs(timPosDevsE, numWorkDays);
 
                             MinSumS += numNegDevsS;
                             MinSumE += numNegDevsE;
@@ -853,304 +593,36 @@ namespace ReportSys.Pages.PageAccess1
 
 
 
-                    foreach (var deP in UpDepIds)
+                    foreach (var depId in UpDepIds)
                     {
-                        datesSet = new HashSet<DateOnly>(Dates); // Преобразуем список дат в HashSet для быстрой проверки
-                        depId = deP.LowerDepartmentId;
-                        dep = await _context.Departments
-                            .Include(d => d.Employees).ThenInclude(e => e.Unavailabilitys)
-                            .Include(d => d.Employees).ThenInclude(e => e.Position)
-                            .Include(d => d.Employees).ThenInclude(e => e.WorkSchedule)
-                            .Include(d => d.Employees).ThenInclude(e => e.Events.Where(e => datesSet.Contains(e.Date)))
-                            .FirstOrDefaultAsync(d => d.Id == depId);
-
-                        
-
-                        worksheet.Cells[row, 1].Value = dep.Name;
-                        worksheet.Cells[row, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Left;
-                        worksheet.Row(row).Style.HorizontalAlignment = ExcelHorizontalAlignment.Left;
-                        row++;
-                        worksheet.Cells[$"A{row - 1}:{GetExcelColumnName(12 + Dates.Count())}{row - 1}"].Merge = true;
-                        worksheet.Cells[$"A{row - 1}:{GetExcelColumnName(12 + Dates.Count())}{row - 1}"].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
-                        worksheet.Cells[$"A{row - 1}:{GetExcelColumnName(12 + Dates.Count())}{row - 1}"].Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                        worksheet.Cells[$"A{row - 1}:{GetExcelColumnName(12 + Dates.Count())}{row - 1}"].Style.Border.Left.Style = ExcelBorderStyle.Thin;
-                        worksheet.Cells[$"A{row - 1}:{GetExcelColumnName(12 + Dates.Count())}{row - 1}"].Style.Border.Right.Style = ExcelBorderStyle.Thin;
-                        numPP = 0;
-                        numWorkDays = 0;
-                        numNegDevsS = 0;
-                        numPosDevsS = 0;
-                        numNegDevsE = 0;
-                        numPosDevsE = 0;
-                        timNegDevsS = new TimeSpan();
-                        timPosDevsS = new TimeSpan();
-                        timNegDevsE = new TimeSpan();
-                        timPosDevsE = new TimeSpan();
-                        // Создание временного интервала в 8 часов
-                        eightHours = TimeSpan.FromHours(8);
-
-                        foreach (var emp in dep.Employees)
+                        var reportData = new ReportData
                         {
+                            Worksheet = worksheet,
+                            Row = row,
+                            MinSumE = MinSumE,
+                            MinSumS = MinSumS,
+                            PlusSumE = PlusSumE,
+                            PlusSumS = PlusSumS,
+                            MinTimeS = MinTimeS,
+                            MinTimeE = MinTimeE,
+                            PlusTimeS = PlusTimeS,
+                            PlusTimeE = PlusTimeE
+                        };
 
-                            var startTime = emp.WorkSchedule.Arrival;
-                            var endTime = emp.WorkSchedule.Exit;
+                        reportData = await Smth(_context, Dates, depId, reportData);
 
+                        // Обновите значения после вызова метода
+                        worksheet = reportData.Worksheet;
+                        row = reportData.Row;
+                        MinSumE = reportData.MinSumE;
+                        MinSumS = reportData.MinSumS;
+                        PlusSumE = reportData.PlusSumE;
+                        PlusSumS = reportData.PlusSumS;
+                        MinTimeS = reportData.MinTimeS;
+                        MinTimeE = reportData.MinTimeE;
+                        PlusTimeS = reportData.PlusTimeS;
+                        PlusTimeE = reportData.PlusTimeE;
 
-                            worksheet.Cells[row, 1].Value = numPP;
-                            row++;
-                            worksheet.Cells[$"A{row - 1}:A{row}"].Merge = true;
-
-                            numPP++;
-
-
-                            worksheet.Cells[row - 1, 2].Value = emp.Position.Name;
-
-                            worksheet.Cells[$"B{row - 1}:B{row}"].Merge = true;
-
-
-                            worksheet.Cells[row - 1, 3].Value = emp.FirstName + " " + emp.SecondName + " " + emp.LastName;
-
-                            worksheet.Cells[$"C{row - 1}:C{row}"].Merge = true;
-
-                            worksheet.Cells[row - 1, 4].Value = "приход";
-                            worksheet.Cells[row, 4].Value = "уход";
-                            var i = 5;
-                            numWorkDays = 0;
-                            numNegDevsS = 0;
-                            numPosDevsS = 0;
-                            numNegDevsE = 0;
-                            numPosDevsE = 0;
-                            timNegDevsS = new TimeSpan();
-                            timPosDevsS = new TimeSpan();
-                            timNegDevsE = new TimeSpan();
-                            timNegDevsE = new TimeSpan();
-                            foreach (var date in Dates)
-                            {
-                                var events = await _context.Events
-                                            .Include(e => e.EventType)
-                                            .Where(e => e.EmployeeId == emp.Id && e.Date == date)
-                                            .ToListAsync();
-
-                                var unf = await _context.Unavailabilitys
-                                           .Include(e => e.UnavailabilityType)
-                                           .Include(e => e.Employee)
-                                           .Where(e => e.Date == date && e.Employee == emp)
-                                           .FirstOrDefaultAsync();
-
-
-                                if (events != null && events.Count != 0)
-                                {
-                                    // Найти первый евент с EventTypeId == 0
-                                    var firstEventType0 = events.FirstOrDefault(e => e.EventType.Id == 1);
-
-                                    // Найти последний евент с EventTypeId == 1
-                                    var lastEventType1 = events.LastOrDefault(e => e.EventType.Id == 2);
-
-
-
-                                    if (firstEventType0 != null)
-                                    {
-                                        worksheet.Cells[row - 1, i].Value = firstEventType0.Time.ToString("HH:mm:ss");
-
-
-                                        if (firstEventType0.Time - startTime > TimeSpan.FromMinutes(3) && firstEventType0.Time > startTime)
-                                        {
-
-                                            if (unf != null)
-                                            {
-                                                if (unf.UnavailabilityTypeId != 4)
-                                                {
-                                                    colorCell(worksheet, row - 1, i, Color.SkyBlue);
-
-                                                }
-                                                else if (firstEventType0.Time < unf.UnavailabilityFrom || firstEventType0.Time > unf.UnavailabilityBefore)
-                                                {
-                                                    colorCell(worksheet, row - 1, i, Color.SandyBrown);
-                                                    numNegDevsS++;
-                                                    timNegDevsS = timNegDevsS.Add(firstEventType0.Time - startTime);
-                                                }
-                                                else
-                                                {
-                                                    colorCell(worksheet, row - 1, i, Color.Khaki);
-                                                }
-                                            }
-                                            else
-                                            {
-                                                colorCell(worksheet, row - 1, i, Color.SandyBrown);
-                                                numNegDevsS++;
-                                                timNegDevsS = timNegDevsS.Add(firstEventType0.Time - startTime);
-                                            }
-
-                                        }
-                                        if (startTime - firstEventType0.Time > TimeSpan.FromMinutes(3) && startTime > firstEventType0.Time)
-                                        {
-                                            if (unf != null)
-                                            {
-                                                if (unf.UnavailabilityTypeId != 4)
-                                                {
-                                                    colorCell(worksheet, row - 1, i, Color.SkyBlue);
-
-                                                }
-
-                                            }
-                                            else
-                                            {
-                                                colorCell(worksheet, row - 1, i, Color.LightGreen);
-                                                numPosDevsS++;
-                                                timPosDevsS = timPosDevsS.Add(startTime - firstEventType0.Time);
-                                            }
-                                        }
-                                    }
-                                    else
-                                    {
-                                        colorCell(worksheet, row - 1, i, Color.Pink);
-                                    }
-                                    if (lastEventType1 != null)
-                                    {
-                                        worksheet.Cells[row, i].Value = lastEventType1.Time.ToString("HH:mm:ss");
-
-                                        if (endTime - lastEventType1.Time > TimeSpan.FromMinutes(3) && endTime > lastEventType1.Time)
-                                        {
-
-                                            if (unf != null)
-                                            {
-                                                if (unf.UnavailabilityTypeId != 4)
-                                                {
-                                                    colorCell(worksheet, row, i, Color.SkyBlue);
-
-                                                }
-                                                else if (lastEventType1.Time < unf.UnavailabilityFrom || lastEventType1.Time > unf.UnavailabilityBefore)
-                                                {
-                                                    colorCell(worksheet, row, i, Color.SandyBrown);
-                                                    numNegDevsE++;
-                                                    timNegDevsE = timNegDevsE.Add(endTime - lastEventType1.Time);
-                                                }
-                                                else
-                                                {
-                                                    colorCell(worksheet, row, i, Color.Khaki);
-
-                                                }
-                                            }
-                                            else
-                                            {
-                                                colorCell(worksheet, row, i, Color.SandyBrown);
-                                                numNegDevsE++;
-                                                timNegDevsE = timNegDevsE.Add(endTime - lastEventType1.Time);
-                                            }
-
-                                        }
-                                        if (lastEventType1.Time - endTime > TimeSpan.FromMinutes(3) && lastEventType1.Time > endTime)
-                                        {
-                                            if (unf != null)
-                                            {
-                                                if (unf.UnavailabilityTypeId != 4)
-                                                {
-                                                    colorCell(worksheet, row, i, Color.SkyBlue);
-
-                                                }
-
-                                            }
-                                            else
-                                            {
-                                                colorCell(worksheet, row, i, Color.LightGreen);
-                                                numPosDevsE++;
-                                                timPosDevsE = timPosDevsE.Add(lastEventType1.Time - endTime);
-                                            }
-
-                                        }
-
-                                    }
-                                    else
-                                    {
-                                        colorCell(worksheet, row, i, Color.Pink);
-                                    }
-                                    if (lastEventType1 != null || firstEventType0 != null)
-                                    {
-                                        numWorkDays++;
-                                    }
-                                    // Добавление бордера к каждой заполненной ячейке
-                                    for (int col = 1; col <= 12 + Dates.Count(); col++)
-                                    {
-                                        worksheet.Cells[i - 1, col].Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                                        worksheet.Cells[i - 1, col].Style.Border.Left.Style = ExcelBorderStyle.Thin;
-                                        worksheet.Cells[i - 1, col].Style.Border.Right.Style = ExcelBorderStyle.Thin;
-                                        worksheet.Cells[i - 1, col].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
-                                        worksheet.Cells[i, col].Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                                        worksheet.Cells[i, col].Style.Border.Left.Style = ExcelBorderStyle.Thin;
-                                        worksheet.Cells[i, col].Style.Border.Right.Style = ExcelBorderStyle.Thin;
-                                        worksheet.Cells[i, col].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
-                                    }
-                                    i++;
-                                }
-                                else 
-                                { 
-                                    
-                                    if (unf != null)
-                                    {
-                                        if (unf.UnavailabilityTypeId != 4)
-                                        {
-                                            colorCell(worksheet, row - 1, i, Color.Khaki);
-                                            colorCell(worksheet, row, i, Color.Khaki);
-
-                                        }
-                                      
-                                    }
-                                    else
-                                    {
-                                        colorCell(worksheet, row - 1, i, Color.SandyBrown);
-                                        colorCell(worksheet, row, i, Color.SandyBrown);
-                                    }
-                                    i++;
-                                }
-
-                            }
-
-                            if (numWorkDays != 0)
-                            {
-                                worksheet.Cells[row - 1, 5 + Dates.Count()].Value = numNegDevsS;
-                                worksheet.Cells[row - 1, 6 + Dates.Count()].Value = Math.Round((double)numNegDevsS / numWorkDays * 100, 2);
-
-                                worksheet.Cells[row - 1, 7 + Dates.Count()].Value = FormatTimeSpan(timNegDevsS);
-                                worksheet.Cells[row - 1, 8 + Dates.Count()].Value = Math.Round(timNegDevsS.TotalHours / (numWorkDays * eightHours.TotalHours) * 100, 2);
-
-                                worksheet.Cells[row - 1, 9 + Dates.Count()].Value = numPosDevsS;
-                                worksheet.Cells[row - 1, 10 + Dates.Count()].Value = Math.Round((double)numPosDevsS / numWorkDays * 100, 2);
-
-                                worksheet.Cells[row - 1, 11 + Dates.Count()].Value = FormatTimeSpan(timPosDevsS);
-                                worksheet.Cells[row - 1, 12 + Dates.Count()].Value = Math.Round(timPosDevsS.TotalHours / (numWorkDays * eightHours.TotalHours) * 100, 2);
-
-
-
-                                worksheet.Cells[row, 5 + Dates.Count()].Value = numNegDevsE;
-                                worksheet.Cells[row, 6 + Dates.Count()].Value = Math.Round((double)numNegDevsE / numWorkDays * 100, 2);
-
-                                worksheet.Cells[row, 7 + Dates.Count()].Value = FormatTimeSpan(timNegDevsE);
-                                worksheet.Cells[row, 8 + Dates.Count()].Value = Math.Round(timNegDevsE.TotalHours / (numWorkDays * eightHours.TotalHours) * 100, 2);
-
-                                worksheet.Cells[row, 9 + Dates.Count()].Value = numPosDevsE;
-                                worksheet.Cells[row, 10 + Dates.Count()].Value = Math.Round((double)numPosDevsE / numWorkDays * 100, 2);
-
-                                worksheet.Cells[row, 11 + Dates.Count()].Value = FormatTimeSpan(timPosDevsE);
-                                worksheet.Cells[row, 12 + Dates.Count()].Value = Math.Round(timPosDevsE.TotalHours / (numWorkDays * eightHours.TotalHours) * 100, 2);
-
-                                MinSumS += numNegDevsS;
-                                MinSumE += numNegDevsE;
-                                PlusSumS += numPosDevsS;
-                                PlusSumE += numPosDevsE;
-                                MinTimeS = MinTimeS.Add(timNegDevsS);
-                                MinTimeE = MinTimeE.Add(timNegDevsE);
-                                PlusTimeS = PlusTimeS.Add(timPosDevsS);
-                                PlusTimeE = PlusTimeE.Add(timPosDevsE);
-                            }
-                            for (int col = 1; col <= 12 + Dates.Count(); col++)
-                            {
-                                worksheet.Cells[row, col].Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                                worksheet.Cells[row, col].Style.Border.Left.Style = ExcelBorderStyle.Thin;
-                                worksheet.Cells[row, col].Style.Border.Right.Style = ExcelBorderStyle.Thin;
-                                worksheet.Cells[row, col].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
-                            }
-                            row++;
-                        }
-                       
                     }
                 }
 
